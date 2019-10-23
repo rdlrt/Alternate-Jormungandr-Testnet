@@ -10,6 +10,9 @@ Test alpha releases to prevent testing with incompatible versions on IOHK networ
 ```
 
 # Genesis Hash
+```
 c63a07f3e0db52c9abf886453316a1698d41a77023972c708345acf6645a8c0c
+```
 
-# Faucet Account 
+# Request Funds
+Check in https://t.me/CardanoPrivateTestnet
