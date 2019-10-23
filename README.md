@@ -17,7 +17,7 @@ Important: To avoid spamming logs of nodes in IOHK network with regards to inval
 ```
 
 # Stake Pool Funds cap:
-Pleae keep your stake below 200000 Test ADAs , to even out leadership tasks for testing
+Please keep your stake below 200000 Test ADAs , to even out leadership tasks for testing
 
 # Genesis Hash
 ```
