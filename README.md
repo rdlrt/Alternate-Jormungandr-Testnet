@@ -1,6 +1,8 @@
 # Alternate-Jormungandr-Testnet
 Test alpha releases to prevent testing with incompatible versions on IOHK network.
 
+Important: To avoid spamming logs of nodes in IOHK network with regards to invalid block0 messages, please ensure to not re-use IP-port combination between different networks
+
 # Trusted Peers:
 ```
   trusted_peers:                                                                
@@ -14,10 +16,13 @@ Test alpha releases to prevent testing with incompatible versions on IOHK networ
       id: ed25519_pk1g2epxg55gacxgnz0m7wwrye03vuql8w2q8n5pyw0tz8l8pq66y5sz3n6qa
 ```
 
+# Stake Pool Funds cap:
+Pleae keep your stake below 200000 Test ADAs , to even out leadership tasks for testing
+
 # Genesis Hash
 ```
 c63a07f3e0db52c9abf886453316a1698d41a77023972c708345acf6645a8c0c
 ```
 
 # Request Funds
-Check in https://t.me/CardanoPrivateTestnet
+Check pinned message in https://t.me/CardanoPrivateTestnet
