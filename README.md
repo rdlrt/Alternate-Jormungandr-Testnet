@@ -10,6 +10,8 @@ Test alpha releases to prevent testing with incompatible versions on IOHK networ
       id: ed25519_pk1ufm5j8sdl37z8egjtrxcfan0caa3tl57rdcm3v7tphwwpdk72j6q0rfkx8
     - address: /ip4/51.91.96.237/tcp/3100
       id: ed25519_pk19knkdhuaze5zu3g3jx2vhewvhyhqxqsxy42caqsjq8twxxdrweesymufnz
+    - address: /ip4/185.161.193.61/tcp/9030
+      id: ed25519_pk1g2epxg55gacxgnz0m7wwrye03vuql8w2q8n5pyw0tz8l8pq66y5sz3n6qa
 ```
 
 # Genesis Hash
