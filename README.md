@@ -1,6 +1,7 @@
 # Important:
 - Intention: Test alpha releases to prevent testing with incompatible versions on IOHK network.
 - Remember: To avoid spamming logs of nodes in IOHK network with regards to invalid block0 messages, please ensure to not re-use IP-port combination between different networks
+- Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Please keep your stake below 200000 Test ADAs , to even out leadership tasks for testing
 
 # Trusted Peers:
