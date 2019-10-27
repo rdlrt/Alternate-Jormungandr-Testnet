@@ -9,8 +9,6 @@
   trusted_peers:
     - address: /ip4/45.32.188.204/tcp/4000
       id: ed25519_pk10tnhxz5lrxurnrjptsve6gsrteyvfc3q7a02pgfgwzkj4vcfk7sqfc68f2
-    - address: /ip4/35.235.111.217/tcp/3001
-      id: ed25519_pk1ufm5j8sdl37z8egjtrxcfan0caa3tl57rdcm3v7tphwwpdk72j6q0rfkx8
     - address: /ip4/51.91.96.237/tcp/3100
       id: ed25519_pk19knkdhuaze5zu3g3jx2vhewvhyhqxqsxy42caqsjq8twxxdrweesymufnz
     - address: /ip4/185.161.193.61/tcp/9030
