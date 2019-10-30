@@ -19,6 +19,9 @@
     #ocg
     - address: /ip4/167.71.144.137/tcp/6996
       id: ed25519_pk1ufm5j8sdl37z8egjtrxcfan0caa3tl57rdcm3v7tphwwpdk72j6q0rfkx8
+    #mark-stopka
+    - address: /ip4/82.209.54.76/tcp/3100
+      id: ed25519_pk1a2y3j923gs8et07pzlx9mxk6qj5yfuzh59p40q9cvtgmudw080esyady0l
 ```
 
 # Genesis Hash
