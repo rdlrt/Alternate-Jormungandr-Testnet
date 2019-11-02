@@ -20,6 +20,9 @@
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabeada4cafebabeada4cafebabeada4cafebabe
+    #mike
+    - address: /ip4/37.0.94.41/tcp/4100
+      id: 91257e8c628647a0655e7781f92423c6eabb8cfaa7258f18
     #ocg
 #    - address: /ip4/167.71.144.137/tcp/<port>
 #      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473     
