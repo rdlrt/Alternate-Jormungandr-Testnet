@@ -17,6 +17,9 @@
     #mark-stopka
     - address: /ip4/82.209.54.76/tcp/3101
       id: 912a76c1a189927db7ca0d703daf7cef0329543b2e68cc4b
+    #markus
+    - address: /ip4/185.161.193.61/tcp/9031
+      id: ada4cafebabeada4cafebabeada4cafebabeada4cafebabe
     #ocg
 #    - address: /ip4/167.71.144.137/tcp/<port>
 #      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473     
