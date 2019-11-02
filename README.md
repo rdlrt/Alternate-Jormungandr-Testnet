@@ -2,7 +2,7 @@
 - Intention: Test alpha releases to prevent testing with incompatible versions on IOHK network.
 - Remember: To avoid spamming logs of nodes of other network with regards to invalid block0 messages, please ensure to not re-use IP-port combination between different networks
 - Also Remember: Before starting node, ensure your storage folder is empty
-- Cap: Pools intending to run their stake pool have been distributed 100000000 Test ADAs, would be great if we use it as a cap.
+- Cap: Pools intending to run their stake pool have been distributed 100000000 Test Lovelaces (RC4), would be great if we use it as a cap.
 
 ## RC4
 
