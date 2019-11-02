@@ -4,7 +4,7 @@
 - Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 3029900000000 Test ADAs, would be great if we use it as a cap.
 
-##RC4
+## RC4
 
 # Trusted Peers:
 
@@ -21,7 +21,7 @@
 bdb9357416232fb6726f406af6dbabb7fc7530990ce553a4602d74f86314c8f3
 ```
 
-##RC3
+## RC3
 
 # Trusted Peers:
 ```
