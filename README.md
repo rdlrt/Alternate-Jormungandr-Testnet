@@ -23,9 +23,12 @@
     #mike
     - address: /ip4/37.0.94.41/tcp/4100
       id: 91257e8c628647a0655e7781f92423c6eabb8cfaa7258f18
+    #papacarp
+      address: /ip4/100.21.146.169/tcp/4000
+      id: eb55d9a20d929299147125049451700b37973c60c088b3d5
     #ocg
 #    - address: /ip4/167.71.144.137/tcp/<port>
-#      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473     
+#      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
 ```
 
 ### Genesis Hash:
@@ -47,7 +50,7 @@ bdb9357416232fb6726f406af6dbabb7fc7530990ce553a4602d74f86314c8f3
     #ocg
     - address: /ip4/167.71.144.137/tcp/6996
       id: ed25519_pk1ufm5j8sdl37z8egjtrxcfan0caa3tl57rdcm3v7tphwwpdk72j6q0rfkx8
-#rc-4 id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473   
+#rc-4 id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
     #mark-stopka
     - address: /ip4/82.209.54.76/tcp/3100
       id: ed25519_pk1a2y3j923gs8et07pzlx9mxk6qj5yfuzh59p40q9cvtgmudw080esyady0l
