@@ -6,7 +6,7 @@
 
 ## RC4
 
-# Trusted Peers:
+### Trusted Peers:
 
 ```
 
@@ -16,14 +16,14 @@
       id: 1324f1ed66d9881f27f1069a92f98820398c02935959a1a9
 ```
 
-# Genesis Hash:
+### Genesis Hash:
 ```
 bdb9357416232fb6726f406af6dbabb7fc7530990ce553a4602d74f86314c8f3
 ```
 
 ## RC3
 
-# Trusted Peers:
+### Trusted Peers:
 ```
   trusted_peers:
     #psychomb
@@ -41,7 +41,7 @@ bdb9357416232fb6726f406af6dbabb7fc7530990ce553a4602d74f86314c8f3
       id: ed25519_pk1a2y3j923gs8et07pzlx9mxk6qj5yfuzh59p40q9cvtgmudw080esyady0l
 ```
 
-# Genesis Hash
+### Genesis Hash
 ```
 c63a07f3e0db52c9abf886453316a1698d41a77023972c708345acf6645a8c0c
 ```
