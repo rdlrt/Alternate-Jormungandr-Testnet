@@ -24,11 +24,11 @@
     - address: /ip4/37.0.94.41/tcp/4100
       id: 91257e8c628647a0655e7781f92423c6eabb8cfaa7258f18
     #papacarp
-      address: /ip4/100.21.146.169/tcp/4000
+    - address: /ip4/100.21.146.169/tcp/4000
       id: eb55d9a20d929299147125049451700b37973c60c088b3d5
     #ocg
-#    - address: /ip4/167.71.144.137/tcp/<port>
-#      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
+    - address: /ip4/167.71.144.137/tcp/9669
+      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
 ```
 
 ### Genesis Hash:
