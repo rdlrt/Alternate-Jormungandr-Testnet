@@ -1,5 +1,5 @@
 # Important:
-- Intention: Test pre-releases to prevent connecting with incompatible versions on IOHK network.
+- Intention: Test pre-releases in a controlled environment to prevent connecting with incompatible versions on IOHK network and also have a stable environment to learn/study.
 - Remember: To avoid spamming logs of nodes of other network (invalid block0), please ensure to not re-use IP-port combination between different networks
 - Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces (RC4), would be great if we use it as a cap.
