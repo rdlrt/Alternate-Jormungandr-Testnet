@@ -38,7 +38,7 @@ if [ "$(uname -s)" == "Linux" ]; then
 	nodesEstablished=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
 	nodesEstablishedUnique=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesSynSent=$(sudo netstat -anlp 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
-elif [ "$(uname -s)" == "Mac" ]; then
+elif [ "$(uname -s)" == "Darwin" ]; then
 	lastBlockDateSlot=$(cli node stats get --output-format json | jq -r .lastBlockDate | cut -f2 -d.)
 	blockRecvCnt=$(cli node stats get --output-format json | jq -r .blockRecvCnt)
 	lastBlockHeight=$(cli node stats get --output-format json | jq -r .lastBlockHeight)
@@ -47,15 +47,17 @@ elif [ "$(uname -s)" == "Mac" ]; then
 	txRecvCnt=$(cli node stats get --output-format json | jq -r .txRecvCnt)
 	productionInEpoch=$(cli leaders logs get --output-format json | jq ' group_by(.scheduled_at_date | split(".")[0])[-1] |  .[]? | if .finished_at_time != null then 1 else 0 end' | awk '{sum+=$0} END{print sum}')
 	tmpdt=$(cli leaders logs get | grep finished_at_ | sort | grep -v \~ | tail -1 | awk '{print $2}')
-	lastBlkCreated=$(cli leaders logs get | grep -A1 $tmpdt | tail -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
-	usedMem=""
+	if [ "$tmpdt" != "" ]; then
+		lastBlkCreated=$(cli leaders logs get | grep -A1 $tmpdt | tail -1 |awk '{print $2}' | sed s#\"##g | awk '{split($1,blk,".")}{printf "%03d",blk[2]}')
+	fi
 	tmpdt=$(cli leaders logs get | grep -A2 finished_at_time:\ ~ | grep scheduled_at_time | sort | head -1 | awk '{print $2}')
 	if [ "$tmpdt" != "" ]; then
-		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
+		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{split($1,blk,".")}{printf "%03d",blk[2]}')
 	fi
-	nodesEstablished=$(sudo netstat -anl | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
-	nodesEstablishedUnique=$(sudo netstat -anl | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
-	nodesSynSent=$(sudo netstat -anl 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
+	usedMem=""
+	nodesEstablished=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
+	nodesEstablishedUnique=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
+	nodesSynSent=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" | grep SYN_SENT  | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 fi
 
 # default NULL values to 0
