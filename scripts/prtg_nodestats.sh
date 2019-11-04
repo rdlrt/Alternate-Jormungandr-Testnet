@@ -24,11 +24,13 @@ if [ "$(uname -s)" == "Linux" ]; then
 	uptime=$(cli node stats get --output-format json | jq -r .uptime)
 	lastBlockTx=$(cli node stats get --output-format json | jq -r .lastBlockTx)
 	txRecvCnt=$(cli node stats get --output-format json | jq -r .txRecvCnt)
-	productionInEpoch=$(cli leaders logs get | grep -c "finished_at_time\: \"20")
+	productionInEpoch=$(cli leaders logs get --output-format json | jq ' group_by(.scheduled_at_date | split(".")[0])[-1] |  .[]? | if .finished_at_time != null then 1 else 0 end' | awk '{sum+=$0} END{print sum}')
 	tmpdt=$(cli leaders logs get | grep finished_at_ | sort | grep -v \~ | tail -1 | awk '{print $2}')
 	lastBlkCreated=$(cli leaders logs get | grep -A1 $tmpdt | tail -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
 	tmpdt=$(cli leaders logs get | grep -A2 finished_at_time:\ ~ | grep scheduled_at_time | sort | head -1 | awk '{print $2}')
-	nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
+	if [ "$tmpdt" != "" ]; then
+		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
+	fi
 	usedMem=$(free -mt | tail -1 | awk '{printf "%d", $3}')
 	nodesEstablished=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
 	nodesEstablishedUnique=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
@@ -40,12 +42,14 @@ elif [ "$(uname -s)" == "Mac" ]; then
 	uptime=$(cli node stats get --output-format json | jq -r .uptime)
 	lastBlockTx=$(cli node stats get --output-format json | jq -r .lastBlockTx)
 	txRecvCnt=$(cli node stats get --output-format json | jq -r .txRecvCnt)
-	productionInEpoch=$(cli leaders logs get | grep -c "finished_at_time\: \"20")
+	productionInEpoch=$(cli leaders logs get --output-format json | jq ' group_by(.scheduled_at_date | split(".")[0])[-1] |  .[]? | if .finished_at_time != null then 1 else 0 end' | awk '{sum+=$0} END{print sum}')
 	tmpdt=$(cli leaders logs get | grep finished_at_ | sort | grep -v \~ | tail -1 | awk '{print $2}')
 	lastBlkCreated=$(cli leaders logs get | grep -A1 $tmpdt | tail -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
 	tmpdt=$(cli leaders logs get | grep -A2 finished_at_time:\ ~ | grep scheduled_at_time | sort | head -1 | awk '{print $2}')
 	usedMem=""
-	nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
+	if [ "$tmpdt" != "" ]; then
+		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
+	fi
 	nodesEstablished=$(sudo netstat -anl | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
 	nodesEstablishedUnique=$(sudo netstat -anl | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesSynSent=$(sudo netstat -anl 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
@@ -94,5 +98,4 @@ if [ "$nodesSynSent" == "" ]; then
 fi
 
 # return a JSON dataset as required for PRTG Monitoring
-echo {\"prtg\": {\"result\": [{\"channel\": \"usedMem\", \"value\": \"${usedMem}\", \"unit\": \"custom\", \"customunit\": \"MB\" }, {\"channel\": \"nodesEstablished\", \"value\": \"${nodesEstablished}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"nodesEstablishedUnique\", \"value\": \"${nodesEstablishedUnique}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"nodesSynSent\", \"value\": \"${nodesSynSent}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"lastBlockDateSlot\", \"value\": \"${lastBlockDateSlot}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"blockRecvCnt\", \"value\": \"${blockRecvCnt}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"lastBlockHeight\", \"value\": \"${lastBlockHeight}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"uptime\", \"value\": \"${uptime}\", \"unit\": \"custom\", \"customunit\": \"sec\" }, {\"channel\": \"lastBlockTx\", \"value\": \"${lastBlockTx}\", \"unit\": \"custom\", \"customunit\": \"tx\" }, {\"channel\": \"txRecvCnt\", \"value\": \"${txRecvCnt}\", \"unit\": \"custom\", \"customunit\": \"tx\" }, {\"channel\": \"productionInEpoch\", \"value\": \"${productionInEpoch}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"lastBlkCreated\", \"value\": \"${lastBlkCreated}\", \"unit\": \"custom\", \"customunit\": \"eblk\" }, {\"channel\": \"nextBlkSched\", \"value\": \"${nextBlkSched}\", \"unit\": \"custom\", \"customunit\": \"eblk\" } ]}} | python -m json.tool
-
+echo {\"prtg\": {\"result\": [{\"channel\": \"usedMem\", \"value\": \"${usedMem}\", \"unit\": \"custom\", \"customunit\": \"MB\" }, {\"channel\": \"nodesEstablished\", \"value\": \"${nodesEstablished}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"nodesEstablishedUnique\", \"value\": \"${nodesEstablishedUnique}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"nodesSynSent\", \"value\": \"${nodesSynSent}\", \"unit\": \"custom\", \"customunit\": \"nodes\" }, {\"channel\": \"lastBlockDateSlot\", \"value\": \"${lastBlockDateSlot}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"blockRecvCnt\", \"value\": \"${blockRecvCnt}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"lastBlockHeight\", \"value\": \"${lastBlockHeight}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"uptime\", \"value\": \"${uptime}\", \"unit\": \"custom\", \"customunit\": \"sec\" }, {\"channel\": \"lastBlockTx\", \"value\": \"${lastBlockTx}\", \"unit\": \"custom\", \"customunit\": \"tx\" }, {\"channel\": \"txRecvCnt\", \"value\": \"${txRecvCnt}\", \"unit\": \"custom\", \"customunit\": \"tx\" }, {\"channel\": \"productionInEpoch\", \"value\": \"${productionInEpoch}\", \"unit\": \"custom\", \"customunit\": \"blks\" }, {\"channel\": \"lastBlkCreated\", \"value\": \"${lastBlkCreated}\", \"unit\": \"custom\", \"customunit\": \"eblk\" }, {\"channel\": \"nextBlkSched\", \"value\": \"${nextBlkSched}\", \"unit\": \"custom\", \"customunit\": \"eblk\" } ]}}
