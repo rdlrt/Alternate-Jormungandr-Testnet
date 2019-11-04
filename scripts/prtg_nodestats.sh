@@ -2,9 +2,13 @@
 shopt -s expand_aliases
 echo "Content-type: application/json" # Tells the browser what kind of content to expect
 echo "" # An empty line. Mandatory, if it is missed the page content will not load
-JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:4100/api
+# Replace the value for URL as appropriate
+if [ ! $JORMUNGANDR_RESTAPI_URL ]; then export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:4100/api; fi
+# If jcli is not in $PATH and accessible, replace the value below as appropriate
 alias cli="$(which jcli) rest v0"
+
 # Node stats data
+
 lastBlockDateSlot=$(cli node stats get --output-format json | jq -r .lastBlockDate | cut -f2 -d.)
 blockRecvCnt=$(cli node stats get --output-format json | jq -r .blockRecvCnt)
 lastBlockHeight=$(cli node stats get --output-format json | jq -r .lastBlockHeight)
@@ -18,15 +22,15 @@ tmpdt=$(cli leaders logs get | grep -A2 finished_at_time:\ ~ | grep scheduled_at
 nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{print $1 * 1000}')
 
 # Netstat remote connections
+# Note ^^ : if you run Jormungandr as a different user, you can call netstat with
+# echo "your_root_password" | sudo -S netstat ...
+
 nodesEstablished=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
 nodesEstablishedUnique=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 nodesSynSent=$(sudo netstat -anlp 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
 
-# Note ^^ : if you run Jormungandr as a different user, you can call netstat with 
-# echo "your_root_password" | sudo -S netstat ... 
-
-
 # default NULL values to 0
+
 if [ "$lastBlockDateSlot" == "" ]; then
         lastBlockDateSlot="0"
 fi
