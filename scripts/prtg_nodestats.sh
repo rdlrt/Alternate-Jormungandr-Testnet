@@ -7,7 +7,6 @@
 # - The script uses sudo to execute netstat commands. Replace as necessary on your local system.
 # - Ensure jcli is in the $PATH and accessible for the user thats running httpd/busybox.
 # - You'd want to set JORMUNGANDR_RESTAPI_URL env variable beforehand (or edit the http://127.0.0.1:4100/api reference below) as seen by busybox/httpd user.
-# - TODO: Mac equivalent of the commands are likely incorrect
 
 shopt -s expand_aliases
 echo "Content-type: application/json" # Tells the browser what kind of content to expect
@@ -54,7 +53,7 @@ elif [ "$(uname -s)" == "Darwin" ]; then
 	if [ "$tmpdt" != "" ]; then
 		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{split($1,blk,".")}{printf "%03d",blk[2]}')
 	fi
-	usedMem=""
+	usedMem="top -l 1 | grep used | awk '{print $4}' | tr -d -c 0-9"
 	nodesEstablished=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesEstablishedUnique=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesSynSent=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" | grep SYN_SENT  | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
