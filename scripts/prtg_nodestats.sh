@@ -54,9 +54,9 @@ elif [ "$(uname -s)" == "Darwin" ]; then
 		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{split($1,blk,".")}{printf "%03d",blk[2]}')
 	fi
 	usedMem="top -l 1 | grep used | awk '{print $4}' | tr -d -c 0-9"
-	nodesEstablished=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
-	nodesEstablishedUnique=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" |grep ESTABLISHED | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
-	nodesSynSent=$(sudo lsof -Pnl +M -i -cmd | egrep "jormungan" | grep SYN_SENT  | cut -c 97-111 | sed -e s#\>##g | cut -d ":" -f 1 | sort | uniq -c | wc -l)
+	nodesEstablished=$(sudo lsof -Pn -i | egrep "jormungan" |grep ESTABLISHED | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | wc -l)
+	nodesEstablishedUnique=$(sudo lsof -Pn -i | egrep "jormungan" |grep ESTABLISHED | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
+	nodesSynSent=$(sudo lsof -Pn -i | egrep "jormungan" | grep SYN_SENT  | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 fi
 
 # default NULL values to 0
