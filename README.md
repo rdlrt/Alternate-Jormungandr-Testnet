@@ -7,12 +7,12 @@
 ## RC5
 
 ### Trusted Peers
-
+```
 #ocg
     - address: /ip4/167.71.144.137/tcp/3339
       id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
 
-
+```
 ***
 ## RC4
 
