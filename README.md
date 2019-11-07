@@ -11,7 +11,7 @@
   trusted_peers:
     #ocg
     - address: /ip4/167.71.144.137/tcp/3339
-      id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
+      id: 8e4b44ddffea0ce6fb1c779a73f5678d011f318db2cde628
     #mark-stopka
     - address: /ip4/82.209.54.76/tcp/3102
       id: 9ac7d641436f32777584b9bda0ec8f49dcfdcdb1dabe4ec4
