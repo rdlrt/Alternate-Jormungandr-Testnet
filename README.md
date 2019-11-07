@@ -5,7 +5,7 @@
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces (RC4), would be great if we use it as a cap.
 
 ## RC5
-***
+
 ### Trusted Peers
 
 #ocg
@@ -13,7 +13,7 @@
       id: 9de8d1e8cc136e2dbce639ec28ba29e331f2ccaeeb0a2473
 
 
-
+***
 ## RC4
 
 ### Trusted Peers:
