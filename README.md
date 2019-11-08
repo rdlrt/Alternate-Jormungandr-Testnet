@@ -13,6 +13,9 @@
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
+    #mark-stopka
+    - address: /ip4/0.0.0.0/tcp/3103
+      id: 70a5097fe89bc10624b1ed144efa1c86dfd987fba4b43c62
 ```
 
 ### genesis Hash
