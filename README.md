@@ -17,7 +17,7 @@
       id: 9ac7d641436f32777584b9bda0ec8f49dcfdcdb1dabe4ec4
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4005
-      id:ee4f7d1ad8620979d6c8e11d4b13e6173ec0ccc517075
+      id: 1baee4f7d1ad8620979d6c8e11d4b13e6173ec0ccc517075
     #psychomb
     - address: /ip4/51.91.96.237/tcp/3264
       id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
