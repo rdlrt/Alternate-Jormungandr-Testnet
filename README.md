@@ -4,6 +4,27 @@
 - Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces (RC4), would be great if we use it as a cap.
 
+## RC7
+
+### Trusted Peers
+
+```
+  trusted_peers:
+    #markus
+    - address: /ip4/185.161.193.61/tcp/9031
+      id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
+```
+
+### genesis Hash
+
+```
+bad49dbbd149ee6cbe1f172d4a727b5e3cf9ea057651f303758eff9cb6ce8387
+```
+
+same as RC5
+
+
+
 ## RC5
 
 ### Trusted Peers
