@@ -124,7 +124,7 @@ $CLI transaction add-output "${DESTINATION_ADDRESS}" "${DESTINATION_AMOUNT}" --s
 echo " ##4. Finalize the transactions"
 $CLI transaction finalize --staging ${STAGING_FILE}
 
-TRANSACTION_ID=$($CLI transaction id --staging ${STAGING_FILE})
+TRANSACTION_ID=$($CLI transaction data-for-witness --staging ${STAGING_FILE})
 
 echo " ##5. Create the witness"
 # Create the witness for the 1 input (add-account) and add it
