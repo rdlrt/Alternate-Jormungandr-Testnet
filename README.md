@@ -19,6 +19,9 @@
     #mark-stopka
     - address: /ip4/82.209.54.76/tcp/3103
       id: 70a5097fe89bc10624b1ed144efa1c86dfd987fba4b43c62
+    #papacarp
+    - address: /ip4/100.21.146.169/tcp/7004
+      id: eeeeeee20d929299147125049451700b37973c60c088b3d6
 ```
 
 ### genesis Hash
