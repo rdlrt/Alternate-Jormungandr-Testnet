@@ -21,6 +21,9 @@
     #psychomb
     - address: /ip4/51.91.96.237/tcp/3264
       id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
+    #markus
+    - address: /ip4/185.161.193.61/tcp/9030
+      id: ada4cafebabeada4cafebabeada4cafebabeada4cafebabe
 ```
 
 ### Genesis Hash:
