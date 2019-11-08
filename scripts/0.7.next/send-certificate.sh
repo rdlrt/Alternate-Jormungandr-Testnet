@@ -121,7 +121,7 @@ $CLI transaction add-certificate --staging ${STAGING_FILE} $(cat ${CERTIFICATE_P
 echo " ##4. Finalize the transaction"
 $CLI transaction finalize --staging ${STAGING_FILE}
 
-TRANSACTION_ID=$($CLI transaction id --staging ${STAGING_FILE})
+TRANSACTION_ID=$($CLI transaction data-for-witness --staging ${STAGING_FILE})
 
 # Create the witness for the 1 input (add-account) and add it
 WITNESS_SECRET_FILE="witness.secret.$$"
