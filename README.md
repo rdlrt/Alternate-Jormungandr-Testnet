@@ -10,6 +10,9 @@
 
 ```
   trusted_peers:
+    #ocg
+    - address: /ip4/167.71.144.137/tcp/9993
+      id: 0f9dc9a3e03a21d357253012abf7a81d021505e53fc0f990
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
