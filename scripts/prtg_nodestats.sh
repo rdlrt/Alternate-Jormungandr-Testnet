@@ -34,7 +34,7 @@ if [ "$(uname -s)" == "Linux" ]; then
 		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{split($0,blk,".")}{printf "%03d",blk[2]}')
 	fi
 	usedMem=$(free -mt | tail -1 | awk '{printf "%d", $3}')
-	nodesEstablished=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | wc -l)
+	nodesEstablished=$(cli network stats get --output-format json | jq '. | length')
 	nodesEstablishedUnique=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesSynSent=$(sudo netstat -anlp 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
 	currentTip=$(cli tip get | cut -c1-3 | od -A n -t x1 | awk '{ print $1$2$3 }')
@@ -55,7 +55,7 @@ elif [ "$(uname -s)" == "Darwin" ]; then
 		nextBlkSched=$(cli leaders logs get | grep -B1 $tmpdt | head -1 |awk '{print $2}' | sed s#\"##g | awk '{split($1,blk,".")}{printf "%03d",blk[2]}')
 	fi
 	usedMem=$(top -l 1 | grep used | awk '{print $4}' | tr -d -c 0-9)
-	nodesEstablished=$(sudo lsof -Pn -i | egrep "jormungan" |grep ESTABLISHED | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | wc -l)
+	nodesEstablished=$(cli network stats get --output-format json | jq '. | length')
 	nodesEstablishedUnique=$(sudo lsof -Pn -i | egrep "jormungan" |grep ESTABLISHED | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	nodesSynSent=$(sudo lsof -Pn -i | egrep "jormungan" | grep SYN_SENT  | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	currentTip=$(cli tip get | cut -c1-3 | od -A n -t x1 | awk '{ print $1$2$3 }')
