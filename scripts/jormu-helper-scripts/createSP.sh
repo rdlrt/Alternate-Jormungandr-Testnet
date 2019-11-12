@@ -74,7 +74,7 @@ cat stake_pool.cert | $CLI certificate sign -k stake_key.sk >stake_pool.signcert
 cat stake_pool.signcert
 
 echo " ##5. Send the signed Stake Pool certificate to the blockchain"
-./send-certificate.sh stake_pool.cert ${REST_PORT} ${ACCOUNT_SK}
+./send-cert.sh stake_pool.cert ${REST_PORT} ${ACCOUNT_SK}
 
 echo " ##6. Retrieve your stake pool id (NodeId)"
 cat stake_pool.cert | $CLI certificate get-stake-pool-id | tee stake_pool.id
