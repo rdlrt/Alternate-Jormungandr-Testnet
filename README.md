@@ -4,31 +4,25 @@
 - Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces (RC4), would be great if we use it as a cap.
 
-## RC7
+
+## v0.7
 
 ### Trusted Peers
-
 ```
   trusted_peers:
-    #ocg
-    - address: /ip4/167.71.144.137/tcp/9993
-      id: 0f9dc9a3e03a21d357253012abf7a81d021505e53fc0f990
     #markus
-    - address: /ip4/185.161.193.61/tcp/9031
+    - address: /ip4/185.161.193.61/tcp/9030
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
-    #mark-stopka
-    - address: /ip4/82.209.54.76/tcp/3103
-      id: 70a5097fe89bc10624b1ed144efa1c86dfd987fba4b43c62
-    #papacarp
-    - address: /ip4/100.21.146.169/tcp/7004
-      id: eeeeeee20d929299147125049451700b37973c60c088b3d6
+    #rdlrt
+    - address: /ip4/139.99.221.149/tcp/4009
+      id: 2a42a62c4a3977d6ee46c98b7f565657f73e3c4b91f5f1e5
 ```
 
 ### genesis Hash
 
 ```
-bad49dbbd149ee6cbe1f172d4a727b5e3cf9ea057651f303758eff9cb6ce8387
+0c6db1bc6b4794c8d3913529ebe6ba986684c3b23bfe4879fde37dabbc71ba93
 ```
 
 # Request Funds
-Check pinned message in https://t.me/CardanoPrivateTestnet
+Check in the secret den
