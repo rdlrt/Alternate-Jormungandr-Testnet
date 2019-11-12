@@ -98,9 +98,8 @@ CERTIFICATE_FILE="account_delegation_certificate"
 echo ${ACCOUNT_SK} > ${ACCOUNT_SK_FILE}
 
 $CLI certificate new stake-delegation \
-    ${STAKE_POOL_ID} \
-    ${ACCOUNT_PK} \
-    ${CERTIFICATE_FILE}
+    ${ACCOUNT_PK} ${STAKE_POOL_ID} \
+    -o ${CERTIFICATE_FILE}
 
 ACCOUNT_COUNTER=$( $CLI rest v0 account get "${ACCOUNT_ADDR}" -h "${REST_URL}" | grep '^counter:' | sed -e 's/counter: //' )
 ACCOUNT_AMOUNT=$((${FEE_CONSTANT} + ${FEE_COEFFICIENT} + ${FEE_CERTIFICATE}))
