@@ -19,6 +19,9 @@
     #ocg
     - address: /ip4/167.71.144.137/tcp/9007
       id: d00b54969a2d2f0d9aebe0b2df69e6d9d6702d7242763d64
+    #mark-stopka
+    - address: /ip4/82.209.54.76/tcp/3104
+      id: 026541a8ceff8903e9336fff08d7f6fdcf84bc43dd96aaf8
 
 ```
 
