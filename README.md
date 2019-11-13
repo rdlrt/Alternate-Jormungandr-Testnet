@@ -16,6 +16,10 @@
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4009
       id: 2a42a62c4a3977d6ee46c98b7f565657f73e3c4b91f5f1e5
+    #ocg
+    - address: /ip4/167.71.144.137/tcp/9007
+      id: d00b54969a2d2f0d9aebe0b2df69e6d9d6702d7242763d64
+
 ```
 
 ### genesis Hash
