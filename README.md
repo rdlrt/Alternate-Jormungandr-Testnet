@@ -3,9 +3,10 @@
 - Remember: To avoid spamming logs of nodes of other network (invalid block0), please ensure to not re-use IP-port combination between different networks
 - Also Remember: Before starting node, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces (RC4), would be great if we use it as a cap.
+- For genesis hash and faucet funds request, we expect you to know where the secret hideout is.
+- For helper scripts, these are either copies - or small modifications of IOHK provided helper scripts to keep them compatible with versions here.
 
-
-## v0.7
+## v0.7.0 (HEAD-a93d4f6)
 
 ### Trusted Peers
 ```
@@ -28,11 +29,3 @@
 
 ```
 
-### genesis Hash
-
-```
-0c6db1bc6b4794c8d3913529ebe6ba986684c3b23bfe4879fde37dabbc71ba93
-```
-
-# Request Funds
-Check in the secret den
