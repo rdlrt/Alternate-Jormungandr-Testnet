@@ -58,18 +58,19 @@ else
 fi
 
 if [ $# -ne 4 ]; then
-  echo "usage: $0 <ADDRESS> <AMOUNT> <REST-LISTEN-PORT> <SOURCE-SK>"
+  echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <ADDRESS> <AMOUNT>"
+  echo "    <REST-LISTEN-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
+  echo "    <ACCOUNT_SK>   The Secret key of the Source address"
   echo "    <ADDRESS>     Address where to send the funds"
   echo "    <AMOUNT>      Amount to be sent (in lovelace) - tx fees will be paid by the source address"
-  echo "    <REST-LISTEN-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
-  echo "    <SOURCE-SK>   The Secret key of the Source address"
   exit 1
 fi
 
-DESTINATION_ADDRESS="$1"
-DESTINATION_AMOUNT="$2"
-REST_PORT="$3"
-SOURCE_SK="$4"
+REST_PORT="$1"
+ACCOUNT_SK="$2"
+DESTINATION_ADDRESS="$3"
+DESTINATION_AMOUNT="$4"
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
@@ -80,7 +81,7 @@ echo "================Send Money================="
 echo "DESTINATION_ADDRESS: ${DESTINATION_ADDRESS}"
 echo "DESTINATION_AMOUNT: ${DESTINATION_AMOUNT}"
 echo "REST_PORT: ${REST_PORT}"
-echo "SOURCE_SK: ${SOURCE_SK}"
+echo "ACCOUNT_SK: ${ACCOUNT_SK}"
 echo "BLOCK0_HASH: ${BLOCK0_HASH}"
 echo "FEE_CONSTANT: ${FEE_CONSTANT}"
 echo "FEE_COEFFICIENT: ${FEE_COEFFICIENT}"
@@ -96,7 +97,7 @@ fi
 
 set -e
 
-SOURCE_PK=$(echo ${SOURCE_SK} | $CLI key to-public)
+SOURCE_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 SOURCE_ADDR=$($CLI address account ${ADDRTYPE} ${SOURCE_PK})
 
 echo "## Sending ${RED}${DESTINATION_AMOUNT}${WHITE} to ${BLUE}${DESTINATION_ADDRESS}${WHITE}"
@@ -131,7 +132,7 @@ echo " ##5. Create the witness"
 WITNESS_SECRET_FILE="witness.secret.$$"
 WITNESS_OUTPUT_FILE="witness.out.$$"
 
-printf "${SOURCE_SK}" >${WITNESS_SECRET_FILE}
+printf "${ACCOUNT_SK}" >${WITNESS_SECRET_FILE}
 
 $CLI transaction make-witness ${TRANSACTION_ID} \
   --genesis-block-hash ${BLOCK0_HASH} \

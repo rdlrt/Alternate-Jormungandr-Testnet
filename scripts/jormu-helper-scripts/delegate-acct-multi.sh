@@ -54,16 +54,18 @@ else
 fi
 
 if [ $# -lt 3 ]; then
-    echo "usage: $0 <ACCOUNT-SK> <REST-LISTEN-PORT> <STAKE_POOL_ID>"
-    echo "    <ACCOUNT-SK>     The Secret key of the Account address"
+    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <STAKE_POOL_ID>"
     echo "    <REST-PORT>      The REST Listen Port set in node-config.yaml file (EX: 3101)"
+    echo "    <ACCOUNT_SK>     The Secret key of the Account address"
     echo "    <STAKE_POOL_ID>  The ID of the Stake Pool you want to delegate to"
     exit 1
 fi
 
+REST_PORT="$1"
+ACCOUNT_SK="$2"
 STAKE_POOL_ID="${@:3}"
-REST_PORT="$2"
-ACCOUNT_SK="$1"
+
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')

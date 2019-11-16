@@ -40,7 +40,7 @@ waitNewBlockCreated() {
   echo "New block was created - $(getTip)"
 }
 
-### COLORS
+### COLORS 
 if [ ${COLORS} -eq 1 ]; then
     GREEN=`printf "\033[0;32m"`
     RED=`printf "\033[0;31m"`
@@ -54,16 +54,18 @@ else
 fi
 
 if [ $# -ne 3 ]; then
-    echo "usage: $0 <STAKE_POOL_ID> <REST-LISTEN-PORT> <ACCOUNT-SK>"
-    echo "    <STAKE_POOL_ID>  The ID of the Stake Pool you want to delegate to"
+    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <STAKE_POOL_ID>"
     echo "    <REST-PORT>      The REST Listen Port set in node-config.yaml file (EX: 3101)"
-    echo "    <ACCOUNT-SK>     The Secret key of the Account address"
+    echo "    <ACCOUNT_SK>     The Secret key of the Account address"
+    echo "    <STAKE_POOL_ID>  The ID of the Stake Pool you want to delegate to"
     exit 1
 fi
 
-STAKE_POOL_ID="$1"
-REST_PORT="$2"
-ACCOUNT_SK="$3"
+REST_PORT="$1"
+ACCOUNT_SK="$2"
+STAKE_POOL_ID="$3"
+
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
