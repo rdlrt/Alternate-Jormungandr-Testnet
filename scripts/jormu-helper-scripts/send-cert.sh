@@ -54,16 +54,17 @@ else
 fi
 
 if [ $# -ne 3 ]; then
-    echo "usage: $0 <CERTIFICATE-PATH> <REST-LISTEN-PORT> <ACCOUNT-SOURCE-SK>"
-    echo "    <CERT-PATH>   Path to a readable certificate file"
+    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT-SOURCE-SK> <CERTIFICATE-PATH>"
     echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
-    echo "    <SOURCE-SK>   The Secret key of the Source address"
+    echo "    <ACCOUNT-SOURCE-SK>   The Secret key of the Source address"
+    echo "    <CERT-PATH>   Path to a readable certificate file"
     exit 1
 fi
 
-CERTIFICATE_PATH="$1"
-REST_PORT="$2"
-ACCOUNT_SK="$3"
+REST_PORT="$1"
+ACCOUNT_SK="$2"
+CERTIFICATE_PATH="$3"
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 

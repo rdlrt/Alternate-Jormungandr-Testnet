@@ -24,16 +24,18 @@ INITIAL_SOURCE_COUNTER=0
 TIMEOUT_NO_OF_BLOCKS=100
 
 if [ $# -ne 3 ]; then
-  echo "usage: $0 <NO-OF-TRANSACTIONS> <REST-LISTEN-PORT> <ACCOUNT-SK>"
-  echo "    <NO-OF-TRANSACTIONS> Number of transactions to be sent from Faucet to Account"
+  echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <NO-OF-TRANSACTIONS>"
   echo "    <REST-LISTEN-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
-  echo "    <ACCOUNT-SK>         The Secret key of the Source Account address (for transactions)"
+  echo "    <ACCOUNT_SK>         The Secret key of the Source Account address (for transactions)"
+  echo "    <NO-OF-TRANSACTIONS> Number of transactions to be sent from Faucet to Account"
   exit 1
 fi
 
-NO_OF_TRANSACTIONS=$1
-REST_PORT=$2
-SOURCE_SK=$3
+REST_PORT=$1
+ACCOUNT_SK=$2
+NO_OF_TRANSACTIONS=$3
+
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 
@@ -166,7 +168,7 @@ sendMoney() {
     SRC_WITNESS_SECRET_FILE="witness.secret.$$"
     SRC_WITNESS_OUTPUT_FILE="witness.out.$$"
 
-    printf "${SOURCE_SK}" > ${SRC_WITNESS_SECRET_FILE}
+    printf "${ACCOUNT_SK}" > ${SRC_WITNESS_SECRET_FILE}
 
     $CLI transaction make-witness ${TRANSACTION_ID} \
         --genesis-block-hash ${BLOCK0_HASH} \
@@ -182,7 +184,7 @@ sendMoney() {
 }
 
 ######################## START TEST ########################
-SOURCE_PK=$(echo ${SOURCE_SK} | $CLI key to-public)
+SOURCE_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 SRC_ADDR=$($CLI address account ${ADDRTYPE} ${SOURCE_PK})
 
 SRC_BALANCE_INIT=$(getAccountValue ${SRC_ADDR})
@@ -190,7 +192,7 @@ SOURCE_COUNTER=$( $CLI rest v0 account get "${SRC_ADDR}" -h "${REST_URL}" | grep
 if [[ ${SOURCE_COUNTER} -gt 0 ]]; then
     SRC_BALANCE_INIT=$(getAccountValue ${SRC_ADDR})dd
 fi
-echo "SOURCE_SK         : ${SOURCE_SK}"
+echo "ACCOUNT_SK         : ${ACCOUNT_SK}"
 echo "SOURCE_PK         : ${SOURCE_PK}"
 echo "SRC_ADDR          : ${SRC_ADDR}"
 echo "SRC_BALANCE_INIT  : ${SRC_BALANCE_INIT}"

@@ -59,18 +59,21 @@ else
   WHITE=""
 fi
 
+[ -z ${JORMUNGANDR_RESTAPI_URL} ] && echo "[ERROR] - you must set the shell variable \$JORMUNGANDR_RESTAPI_URL ex: export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:3101/api" && exit 1
+
 if [ $# -ne 3 ]; then
-  echo "usage: $0 <SOURCE-SK> <ADDRESS> <AMOUNT>"
+  echo "usage: $0 <ACCOUNT_SK> <ADDRESS> <AMOUNT>"
   echo ""
-  echo "    <SOURCE-SK>   The Secret key of the Source address"
+  echo "    <ACCOUNT_SK>   The Secret key of the Source address"
   echo "    <ADDRESS>     Address where to send the funds"
   echo "    <AMOUNT>      Amount to be sent (in lovelace) - tx fees will be paid by the source address"
   exit 1
 fi
 
-SOURCE_SK="$1"
+ACCOUNT_SK="$1"
 DESTINATION_ADDRESS="$2"
 DESTINATION_AMOUNT="$(expr $3 \* 1000000)"
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 BLOCK0_HASH=$($CLI rest v0 settings get | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
 FEE_CONSTANT=$($CLI rest v0 settings get | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
@@ -79,7 +82,7 @@ FEE_COEFFICIENT=$($CLI rest v0 settings get | grep 'coefficient:' | sed -e 's/^[
 echo "================Send Money================="
 echo "DESTINATION_ADDRESS: ${DESTINATION_ADDRESS}"
 echo "DESTINATION_AMOUNT: ${DESTINATION_AMOUNT}"
-echo "SOURCE_SK: ${SOURCE_SK}"
+echo "ACCOUNT_SK: ${ACCOUNT_SK}"
 echo "BLOCK0_HASH: ${BLOCK0_HASH}"
 echo "FEE_CONSTANT: ${FEE_CONSTANT}"
 echo "FEE_COEFFICIENT: ${FEE_COEFFICIENT}"
@@ -95,7 +98,7 @@ fi
 
 set -e
 
-SOURCE_PK=$(echo ${SOURCE_SK} | $CLI key to-public)
+SOURCE_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 SOURCE_ADDR=$($CLI address account ${ADDRTYPE} ${SOURCE_PK})
 
 echo "## Sending ${RED}${DESTINATION_AMOUNT}${WHITE} to ${BLUE}${DESTINATION_ADDRESS}${WHITE}"
@@ -130,7 +133,7 @@ echo " ##5. Create the witness"
 WITNESS_SECRET_FILE="witness.secret.$$"
 WITNESS_OUTPUT_FILE="witness.out.$$"
 
-printf "${SOURCE_SK}" >${WITNESS_SECRET_FILE}
+printf "${ACCOUNT_SK}" >${WITNESS_SECRET_FILE}
 
 $CLI transaction make-witness ${TRANSACTION_ID} \
   --genesis-block-hash ${BLOCK0_HASH} \

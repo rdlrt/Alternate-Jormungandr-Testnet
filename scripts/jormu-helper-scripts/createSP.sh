@@ -18,16 +18,19 @@
 CLI="jcli"
 COLORS=1
 ADDRTYPE="--testing"
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ $# -ne 2 ]; then
     echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK>"
     echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
-    echo "    <SOURCE-SK>   The Secret key of the Source address"
+    echo "    <ACCOUNT_SK>   The Secret key of the Source address"
     exit 1
 fi
 
 REST_PORT="$1"
 ACCOUNT_SK="$2"
+
+[ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
@@ -74,7 +77,7 @@ cat stake_pool.cert | $CLI certificate sign -k stake_key.sk >stake_pool.signcert
 cat stake_pool.signcert
 
 echo " ##5. Send the signed Stake Pool certificate to the blockchain"
-./send-cert.sh stake_pool.cert ${REST_PORT} ${ACCOUNT_SK}
+${SCRIPTPATH}/send-cert.sh stake_pool.cert ${REST_PORT} ${ACCOUNT_SK}
 
 echo " ##6. Retrieve your stake pool id (NodeId)"
 cat stake_pool.cert | $CLI certificate get-stake-pool-id | tee stake_pool.id
