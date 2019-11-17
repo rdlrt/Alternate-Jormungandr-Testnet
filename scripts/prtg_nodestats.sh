@@ -39,7 +39,7 @@ if [ "$(uname -s)" == "Linux" ]; then
 	nodesEstablishedUnique=$(sudo netstat -anlp | egrep "ESTABLISHED+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	#nodesSynSent=$(sudo netstat -anlp 2>/dev/null | egrep "SYN_SENT+.*jormungandr" | cut -c 45-68 | cut -d ":" -f 1 | sort | uniq | wc -l)
 	currentTip=$(cli tip get | cut -c1-3 | od -A n -t x1 | awk '{ print $1$2$3 }')
-	lostBlocks=$(python3 lostBlocks.py -r "${JORMUNGANDR_RESTAPI_URL}")
+	lostBlocks=$(python3 lostblocks.py -r "${JORMUNGANDR_RESTAPI_URL}")
 elif [ "$(uname -s)" == "Darwin" ]; then
 	lastBlockDateSlot=$(cli node stats get --output-format json | jq -r .lastBlockDate | cut -f2 -d.)
 	blockRecvCnt=$(cli node stats get --output-format json | jq -r .blockRecvCnt)
@@ -61,7 +61,7 @@ elif [ "$(uname -s)" == "Darwin" ]; then
 	nodesEstablishedUnique=$(sudo lsof -Pn -i | egrep "jormungan" |grep ESTABLISHED | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	#nodesSynSent=$(sudo lsof -Pn -i | egrep "jormungan" | grep SYN_SENT  | cut -c 97-112 | sed -e 's#\(\>\)\(\-\)##g' | cut -d ":" -f 1 | sort | uniq -c | wc -l)
 	currentTip=$(cli tip get | cut -c1-3 | od -A n -t x1 | awk '{ print $1$2$3 }')
-	lostBlocks=$(python3 lostBlocks.py -r "${JORMUNGANDR_RESTAPI_URL}")
+	lostBlocks=$(python3 lostblocks.py -r "${JORMUNGANDR_RESTAPI_URL}")
 fi
 
 # default NULL values to 0
@@ -107,6 +107,9 @@ if [ "$nodesSynSent" == "" ]; then
 fi
 if [ "$currentTip" == "" ]; then
 	currentTip="0"
+fi
+if [ "$lostBlock" == "" ]; then
+	lostBlock="0"
 fi
 
 # return a JSON dataset as required for PRTG Monitoring
