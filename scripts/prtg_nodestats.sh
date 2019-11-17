@@ -108,8 +108,8 @@ fi
 if [ "$currentTip" == "" ]; then
 	currentTip="0"
 fi
-if [ "$lostBlock" == "" ]; then
-	lostBlock="0"
+if [ "$lostBlocks" == "" ]; then
+	lostBlocks="0"
 fi
 
 # return a JSON dataset as required for PRTG Monitoring
