@@ -25,7 +25,7 @@
       id: 026541a8ceff8903e9336fff08d7f6fdcf84bc43dd96aaf8
     #rcmorano
     - address: /ip4/51.15.64.122/tcp/8299
-    - id: 5b2546dad363cc150b98aaa0eb1ba5fd9df81eb705d8f875
+      id: 5b2546dad363cc150b98aaa0eb1ba5fd9df81eb705d8f875
 
 ```
 
