@@ -6,6 +6,16 @@
 - For genesis hash and faucet funds request, we expect you to know where the secret hideout is.
 - For helper scripts, these are either copies - or small modifications of IOHK provided helper scripts to keep them compatible with versions here.
 
+## v0.8.0 (HEAD-b589a10)
+
+### Trusted Peers
+```
+  trusted_peers:
+    #rdlrt
+    - address: /ip4/139.99.221.149/tcp/4001
+      id: 4d96b58ad438913e03768b85693a647c84b1dad0d261ef24
+```
+
 ## v0.7.0 (HEAD-a93d4f6)
 
 ### Trusted Peers
@@ -14,9 +24,6 @@
     #markus
     - address: /ip4/185.161.193.61/tcp/9030
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
-    #rdlrt
-    - address: /ip4/139.99.221.149/tcp/4009
-      id: 2a42a62c4a3977d6ee46c98b7f565657f73e3c4b91f5f1e5
     #ocg
     - address: /ip4/167.71.144.137/tcp/7997
       id: 0bb213eb0623283e9c55ddce81a2e5de6e19c50702acd1ab
@@ -28,6 +35,4 @@
       id: 5b2546dad363cc150b98aaa0eb1ba5fd9df81eb705d8f875
 
 ```
-
-Genesis-Hash: 0c6db1bc6b4794c8d3913529ebe6ba986684c3b23bfe4879fde37dabbc71ba93
 
