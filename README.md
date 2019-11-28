@@ -21,7 +21,7 @@
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
     #rcmorano
-    - address: /ip4/51.15.64.122/tcp/8299
+    - address: /ip4/51.15.64.122/tcp/9299
       id: 1d93b98261d632e25412c207a665053e91fbd2bb04717512
 
 ```
