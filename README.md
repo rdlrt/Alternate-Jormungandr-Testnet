@@ -14,6 +14,10 @@
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4001
       id: 4d96b58ad438913e03768b85693a647c84b1dad0d261ef24
+    #ocg
+    - address: /ip4/167.71.144.137/tcp/9779
+      id: 730758be44ce4faa90baae1505ae483f3d2a5dac26590237
+
 ```
 
 ## v0.7.0 (HEAD-a93d4f6)
