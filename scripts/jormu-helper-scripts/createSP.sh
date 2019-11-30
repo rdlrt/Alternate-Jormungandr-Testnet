@@ -36,7 +36,7 @@ REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
 FEE_CONSTANT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
 FEE_COEFFICIENT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'coefficient:' | sed -e 's/^[[:space:]]*//' | sed -e 's/coefficient: //')
-FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate: //')
+FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate_pool_registration:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_pool_registration: //')
 
 ACCOUNT_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 ACCOUNT_ADDR=$($CLI address account ${ADDRTYPE} ${ACCOUNT_PK})
@@ -65,7 +65,7 @@ echo POOL_KES_SK: ${POOL_KES_SK}
 echo POOL_KES_PK: ${POOL_KES_PK}
 
 echo " ##3. Create the Stake Pool certificate using above VRF and KEY public keys"
-$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --management-threshold 1 >stake_pool.cert
+$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --tax-ratio "1/10" --tax-limit 10000000 --management-threshold 1 >stake_pool.cert
 
 cat stake_pool.cert
 
