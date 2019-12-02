@@ -24,7 +24,7 @@
     - address: /ip4/51.15.64.122/tcp/9299
       id: ada75dfb9b60d10bd46bcbaa1eaeb29662386c367265e9c7
     #psychomb
-    #- address: /ip4/51.91.96.237/tcp/3329
-    #   id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
+    - address: /ip4/51.91.96.237/tcp/3377
+       id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
 
 ```
