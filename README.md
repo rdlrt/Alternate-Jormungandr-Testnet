@@ -20,9 +20,9 @@
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
-    #rcmorano
-    #- address: /ip4/51.15.64.122/tcp/9299
-    #  id: 1d93b98261d632e25412c207a665053e91fbd2bb04717512
+    rcmorano
+    - address: /ip4/51.15.64.122/tcp/9299
+      id: ada75dfb9b60d10bd46bcbaa1eaeb29662386c367265e9c7
     #psychomb
     #- address: /ip4/51.91.96.237/tcp/3329
     #   id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
