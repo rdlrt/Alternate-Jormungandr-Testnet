@@ -14,6 +14,9 @@
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4003
       id: 3799c23842a0fbfa4acc29dda595dd03a14fa48cf38012ff
+    #mark-stopka
+     - address: /ip4/82.209.54.77/tcp/3000
+       id: d0c0e9e18e585742ea017fb12285b276d62a74721c526523
     #ocg
     #- address: /ip4/167.71.144.137/tcp/9779
     #  id: 730758be44ce4faa90baae1505ae483f3d2a5dac26590237
