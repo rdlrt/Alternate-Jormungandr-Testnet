@@ -20,15 +20,19 @@ COLORS=1
 ADDRTYPE="--testing"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [ $# -ne 2 ]; then
-    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK>"
+if [ $# -ne 5 ]; then
+    echo "usage: $0 <REST-LISTEN-PORT> <TAX_VALUE> <TAX_RATIO> <ACCOUNT_SK>"
     echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
+    echo "    <TAX_VALUE>   The fixed cut the stake pool will take from the total reward"
+    echo "    <TAX_RATIO>   The percentage of the remaining value that will be taken from the total"
     echo "    <ACCOUNT_SK>   The Secret key of the Source address"
     exit 1
 fi
 
 REST_PORT="$1"
-ACCOUNT_SK="$2"
+TAX_VALUE="$2"
+TAX_RATIO="$3"
+ACCOUNT_SK="$4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
@@ -65,7 +69,7 @@ echo POOL_KES_SK: ${POOL_KES_SK}
 echo POOL_KES_PK: ${POOL_KES_PK}
 
 echo " ##3. Create the Stake Pool certificate using above VRF and KEY public keys"
-$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --tax-ratio "1/10" --tax-limit 10000000 --management-threshold 1 >stake_pool.cert
+$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --tax-fixed ${TAX_VALUE} --tax-ratio ${TAX_RATIO} --tax-limit ${TAX_LIMIT} --management-threshold 1 >stake_pool.cert
 
 cat stake_pool.cert
 
