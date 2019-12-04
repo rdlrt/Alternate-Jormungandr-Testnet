@@ -20,7 +20,7 @@ COLORS=1
 ADDRTYPE="--testing"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [ $# -ne 5 ]; then
+if [ $# -ne 4 ]; then
     echo "usage: $0 <REST-LISTEN-PORT> <TAX_VALUE> <TAX_RATIO> <ACCOUNT_SK>"
     echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
     echo "    <TAX_VALUE>   The fixed cut the stake pool will take from the total reward"
@@ -32,6 +32,7 @@ fi
 REST_PORT="$1"
 TAX_VALUE="$2"
 TAX_RATIO="$3"
+TAX_LIMIT="$(expr 10 \* 1000000)"
 ACCOUNT_SK="$4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
