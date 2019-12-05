@@ -12,50 +12,7 @@
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
-### CONFIGURATION
-CLI="jcli"
-COLORS=1
-ADDRTYPE="--testing"
-SLOT_DURATION=2
-TIMEOUT_NO_OF_BLOCKS=200
-
-getTip() {
-  echo $($CLI rest v0 tip get -h "${REST_URL}")
-}
-
-waitNewBlockCreated() {
-  COUNTER=${TIMEOUT_NO_OF_BLOCKS}
-  echo "  ##Waiting for new block to be created (timeout = ${COUNTER} blocks = $((${COUNTER}*${SLOT_DURATION})) secs)."
-  initialTip=$(getTip)
-  actualTip=$(getTip)
-
-  while [ "${actualTip}" = "${initialTip}" ]; do
-    echo -ne '  ##Waiting...\r'
-    sleep ${SLOT_DURATION}
-    echo -ne '              \r'
-    actualTip=$(getTip)
-    COUNTER=$((COUNTER - 1))
-    if [ ${COUNTER} -lt 2 ]; then
-      echo "  !!!!!! ERROR: Waited $((${TIMEOUT_NO_OF_BLOCKS} * ${SLOT_DURATION})) secs (${TIMEOUT_NO_OF_BLOCKS} blocks * ${SLOT_DURATION} seconds slot duration) and no new block was created."
-      echo "  The transaction may still be included when a block is finally created."
-      exit 1
-    fi
-  done
-  echo "New block was created - $(getTip)"
-}
-
-### COLORS
-if [ ${COLORS} -eq 1 ]; then
-  GREEN=$(printf "\033[0;32m")
-  RED=$(printf "\033[0;31m")
-  BLUE=$(printf "\033[0;33m")
-  WHITE=$(printf "\033[0m")
-else
-  GREEN=""
-  RED=""
-  BLUE=""
-  WHITE=""
-fi
+. $(dirname $0)/env
 
 if [ $# -ne 4 ]; then
   echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <ADDRESS> <AMOUNT>"

@@ -6,7 +6,7 @@
 - For genesis hash and faucet funds request, we expect you to know where the secret hideout is.
 - For helper scripts, these are either copies - or small modifications of IOHK provided helper scripts to keep them compatible with versions here.
 
-## v0.8.0rc7
+## v0.8.0rc8
 
 ### Trusted Peers
 ```
@@ -17,4 +17,7 @@
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
+    #psychomb
+    #- address: /ip4/51.91.96.237/tcp/3378 
+    #  id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
 ```

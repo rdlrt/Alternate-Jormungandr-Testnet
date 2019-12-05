@@ -11,9 +11,7 @@
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
-### CONFIGURATION
-CLI="jcli"
-ADDRTYPE="--testing"
+. $(dirname $0)/env
 
 if [ $# -ne 1 ]; then
     echo "usage: $0 <ADDR_TYPE>"
@@ -22,6 +20,7 @@ if [ $# -ne 1 ]; then
 fi
 
 ADDR_SK=$($CLI key generate --type=ed25519extended)
+echo ${ADDR_SK} > addr_$(date +%d%m%y%H%M%S%Z).sk 
 ADDR_PK=$(echo ${ADDR_SK} | $CLI key to-public)
 if [ $1 = "account" ]; then
     ADDR=$($CLI address account ${ADDR_PK} ${ADDRTYPE})

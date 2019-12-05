@@ -9,6 +9,7 @@
 # - You'd want to set JORMUNGANDR_RESTAPI_URL env variable beforehand (or edit the http://127.0.0.1:4100/api reference below) as seen by busybox/httpd user.
 
 shopt -s expand_aliases
+exec 2>/dev/null
 echo "Content-type: application/json" # Tells the browser what kind of content to expect
 echo "" # An empty line. Mandatory, if it is missed the page content will not load
 # Replace the value for URL as appropriate

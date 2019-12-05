@@ -11,53 +11,13 @@
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
-### CONFIGURATION
-CLI="jcli"
-COLORS=1
-ADDRTYPE="--testing"
-SLOT_DURATION=2
-TIMEOUT_NO_OF_BLOCKS=200
-
-getTip() {
-  echo $($CLI rest v0 tip get -h "${REST_URL}")
-}
-
-waitNewBlockCreated() {
-  COUNTER=${TIMEOUT_NO_OF_BLOCKS}
-  echo "  ##Waiting for new block to be created (timeout = ${COUNTER} blocks = $((${COUNTER}*${SLOT_DURATION}))s)"
-  initialTip=$(getTip)
-  actualTip=$(getTip)
-
-  while [ "${actualTip}" = "${initialTip}" ]; do
-    sleep ${SLOT_DURATION}
-    actualTip=$(getTip)
-    COUNTER=$((COUNTER - 1))
-    if [ ${COUNTER} -lt 2 ]; then
-      echo "  !!!!!! ERROR: Waited $((${TIMEOUT_NO_OF_BLOCKS} * ${SLOT_DURATION}))s secs (${TIMEOUT_NO_OF_BLOCKS}*${SLOT_DURATION}) and no new block created"
-      exit 1
-    fi
-  done
-  echo "New block was created - $(getTip)"
-}
-
-### COLORS
-if [ ${COLORS} -eq 1 ]; then
-    GREEN=`printf "\033[0;32m"`
-    RED=`printf "\033[0;31m"`
-    BLUE=`printf "\033[0;33m"`
-    WHITE=`printf "\033[0m"`
-else
-    GREEN=""
-    RED=""
-    BLUE=""
-    WHITE=""
-fi
+. $(dirname $0)/env
 
 if [ $# -lt 3 ]; then
-    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <STAKE_POOL_ID>"
+    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <STAKE_POOL_IDS>"
     echo "    <REST-PORT>      The REST Listen Port set in node-config.yaml file (EX: 3101)"
     echo "    <ACCOUNT_SK>     The Secret key of the Account address"
-    echo "    <STAKE_POOL_ID>  The ID of the Stake Pool you want to delegate to"
+    echo "    <STAKE_POOL_IDS> The ID and weight of the Stake Pools you want to delegate to in the format <pool_id_1>:1 > <pool_id_2>:1 ...
     exit 1
 fi
 
@@ -71,7 +31,7 @@ REST_URL="http://127.0.0.1:${REST_PORT}/api"
 BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
 FEE_CONSTANT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
 FEE_COEFFICIENT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'coefficient:' | sed -e 's/^[[:space:]]*//' | sed -e 's/coefficient: //')
-FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate_stake_delegation:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_stale_delegate: //')
+FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate_stake_delegation:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_stake_delegation: //')
 
 echo "================DELEGATE ACCOUNT================="
 echo "REST_PORT: ${REST_PORT}"

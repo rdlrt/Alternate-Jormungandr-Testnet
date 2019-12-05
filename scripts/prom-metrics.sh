@@ -4,6 +4,7 @@
 # socat TCP-LISTEN:9090,crlf,reuseaddr,fork     SYSTEM:"echo HTTP/1.1 200 OK;SERVED=true bash /tmp/get-metrics;"
 # More info on prom-comptible output: https://github.com/prometheus/docs/blob/master/content/docs/instrumenting/exposition_formats.md
 
+exec 2>/dev/null
 function get-metrics() {
   shopt -s expand_aliases
   if [ ! -z "$SERVED" ]

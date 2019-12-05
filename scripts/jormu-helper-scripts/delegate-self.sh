@@ -11,47 +11,7 @@
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
-### CONFIGURATION
-CLI="jcli"
-COLORS=1
-ADDRTYPE="--testing"
-SLOT_DURATION=2
-TIMEOUT_NO_OF_BLOCKS=200
-
-getTip() {
-  echo $($CLI rest v0 tip get -h "${REST_URL}")
-}
-
-waitNewBlockCreated() {
-  COUNTER=${TIMEOUT_NO_OF_BLOCKS}
-  echo "  ##Waiting for new block to be created (timeout = ${COUNTER} blocks = $((${COUNTER}*${SLOT_DURATION}))s)"
-  initialTip=$(getTip)
-  actualTip=$(getTip)
-
-  while [ "${actualTip}" = "${initialTip}" ]; do
-    sleep ${SLOT_DURATION}
-    actualTip=$(getTip)
-    COUNTER=$((COUNTER - 1))
-    if [ ${COUNTER} -lt 2 ]; then
-      echo "  !!!!!! ERROR: Waited $((${TIMEOUT_NO_OF_BLOCKS} * ${SLOT_DURATION}))s secs (${TIMEOUT_NO_OF_BLOCKS}*${SLOT_DURATION}) and no new block created"
-      exit 1
-    fi
-  done
-  echo "New block was created - $(getTip)"
-}
-
-### COLORS 
-if [ ${COLORS} -eq 1 ]; then
-    GREEN=`printf "\033[0;32m"`
-    RED=`printf "\033[0;31m"`
-    BLUE=`printf "\033[0;33m"`
-    WHITE=`printf "\033[0m"`
-else
-    GREEN=""
-    RED=""
-    BLUE=""
-    WHITE=""
-fi
+. $(dirname $0)/env
 
 if [ $# -ne 3 ]; then
     echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <STAKE_POOL_ID>"

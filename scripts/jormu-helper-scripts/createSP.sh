@@ -14,10 +14,7 @@
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
-### CONFIGURATION
-CLI="jcli"
-COLORS=1
-ADDRTYPE="--testing"
+. $(dirname $0)/env
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ $# -ne 4 ]; then
@@ -71,8 +68,6 @@ echo POOL_KES_PK: ${POOL_KES_PK}
 
 echo " ##3. Create the Stake Pool certificate using above VRF and KEY public keys"
 $CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --tax-fixed ${TAX_VALUE} --tax-ratio ${TAX_RATIO} --tax-limit ${TAX_LIMIT} --management-threshold 1 >stake_pool.cert
-
-cat stake_pool.cert
 
 echo " ##4. Sign the Stake Pool certificate with the Stake Pool Owner private key"
 echo ${ACCOUNT_SK} > stake_key.sk

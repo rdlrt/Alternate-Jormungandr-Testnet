@@ -13,15 +13,10 @@
 #  This script is sending a number of transactions from a source account (that needs to have enough funds) to 
 #  a new account address. 
 
-### CONFIGURATION
-CLI="jcli"
-COLORS=1
-ADDRTYPE="--testing"
+. $(dirname $0)/env
 INITIAL_TIP=""
 TX_COUNTER_SAME_SLOT=0
 INITIAL_SRC_COUNTER=0
-INITIAL_SOURCE_COUNTER=0
-TIMEOUT_NO_OF_BLOCKS=100
 
 if [ $# -ne 3 ]; then
   echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT_SK> <NO-OF-TRANSACTIONS>"
