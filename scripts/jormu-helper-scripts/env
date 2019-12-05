@@ -1,7 +1,8 @@
 CLI="$(which jcli)"
+[ -z "${CLI}" ] && [ -f jcli ] && CLI="./jcli"
 ADDRTYPE="--testing"
 COLORS=1
-SLOT_DURATION=$(cli rest v0 settings get 2>&1 | grep ^slotDuration | sed -e 's/slotDuration: //')
+SLOT_DURATION=$(${CLI} rest v0 settings get 2>&1 | grep ^slotDuration | sed -e 's/slotDuration: //')
 TIMEOUT_NO_OF_BLOCKS=200
 ### COLORS
 if [ ${COLORS} -eq 1 ]; then
