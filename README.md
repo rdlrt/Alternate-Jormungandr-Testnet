@@ -14,6 +14,9 @@
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4005
       id: c7cfce76fe63752d811265fc03bfbac701dc5ac77b8dbf5c
+    #homer
+    - address: /ip4/194.223.37.87/tcp/4091
+      id: 9c8dccd7c3ee36c875d041bb8c026f863aa4d309cc4ced31
     #markus
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
