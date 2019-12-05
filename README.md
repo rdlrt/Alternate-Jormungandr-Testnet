@@ -18,6 +18,6 @@
     - address: /ip4/185.161.193.61/tcp/9031
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
     #psychomb
-    #- address: /ip4/51.91.96.237/tcp/3378 
-    #  id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
+    - address: /ip4/51.91.96.237/tcp/3482 
+      id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
 ```
