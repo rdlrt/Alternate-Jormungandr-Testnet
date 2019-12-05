@@ -20,4 +20,7 @@
     #psychomb
     - address: /ip4/51.91.96.237/tcp/3482 
       id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
+    #papacarp
+    - address: /ip4/100.21.146.169/tcp/8008
+      id: 263f5a1857c1e53d7268ae5b0252afa7a93ae278b5468d2f
 ```
