@@ -6,7 +6,7 @@
 - For genesis hash and faucet funds request, we expect you to know where the secret hideout is.
 - For helper scripts, these are either copies - or small modifications of IOHK provided helper scripts to keep them compatible with versions here.
 
-## v0.8.0rc8
+## v0.8.0rc9
 
 ### Trusted Peers
 ```
