@@ -26,4 +26,7 @@
     #papacarp
     #- address: /ip4/100.21.146.169/tcp/8008
     #  id: 263f5a1857c1e53d7268ae5b0252afa7a93ae278b5468d2f
+    #rcmorano
+    - address: /ip4/51.15.64.122/tcp/10299
+      id: bee07da9369c9e734e9fb24f15cd7588edc7c8811cfb7499
 ```
