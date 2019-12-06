@@ -12,18 +12,18 @@
 ```
   trusted_peers:
     #rdlrt
-    - address: /ip4/139.99.221.149/tcp/4005
-      id: c7cfce76fe63752d811265fc03bfbac701dc5ac77b8dbf5c
+    - address: /ip4/139.99.221.149/tcp/4006
+      id: e869d9bf130315f6c1ee630d850aea45158688ce635deb3e
     #homer_windows
-    - address: /ip4/194.223.37.87/tcp/4001
-      id: 8f5d18d1b50941fb030e8e74876f7212874753f45bce4800
+    #- address: /ip4/194.223.37.87/tcp/4001
+    #  id: 8f5d18d1b50941fb030e8e74876f7212874753f45bce4800
     #markus
-    - address: /ip4/185.161.193.61/tcp/9031
+    - address: /ip4/185.161.193.61/tcp/9030
       id: ada4cafebabecafebabecafebabecafebabecafebabe4ada
     #psychomb
-    - address: /ip4/51.91.96.237/tcp/3482 
-      id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
+    #- address: /ip4/51.91.96.237/tcp/3482 
+    #  id: 1eaf62ec280f266717b47ca53a80c1bae0e49589ade6654b
     #papacarp
-    - address: /ip4/100.21.146.169/tcp/8008
-      id: 263f5a1857c1e53d7268ae5b0252afa7a93ae278b5468d2f
+    #- address: /ip4/100.21.146.169/tcp/8008
+    #  id: 263f5a1857c1e53d7268ae5b0252afa7a93ae278b5468d2f
 ```
