@@ -7,8 +7,6 @@
 #  deployment, and is solely used for learning how the node and blockchain
 #  works, and how to interact with everything.
 #
-#  It also asumes that `jcli` is in the same folder with the script.
-#
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
 . $(dirname $0)/env

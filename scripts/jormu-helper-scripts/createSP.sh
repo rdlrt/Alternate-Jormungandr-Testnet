@@ -7,44 +7,36 @@
 #  deployment, and is solely used for learning how the node and blockchain
 #  works, and how to interact with everything.
 #
-#  It also asumes that `jcli` is in the same folder with the script.
-#
 # Scenario:
 #   Configure 1 stake pool having as owner the provided account address (secret key)
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
 . $(dirname $0)/env
+
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ $# -ne 4 ]; then
-    echo "usage: $0 <REST-LISTEN-PORT> <TAX_VALUE> <TAX_RATIO> <ACCOUNT_SK>"
-    echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
-    echo "    <TAX_VALUE>   The fixed cut the stake pool will take from the total reward"
-    echo "    <TAX_RATIO>   The percentage of the remaining value that will be taken from the total"
-    echo "    <ACCOUNT_SK>   The Secret key of the Source address"
+    echo "usage: $0 <TAX_VALUE> <TAX_RATIO> <TAX_LIMIT> <ACCOUNT_SK>"
+    echo "    <TAX_VALUE>   The fixed cut (in lovelaces) the stake pool will take from the total reward."
+    echo "    <TAX_RATIO>   The ratio of the remaining value that will be taken from the total, eg: For a value of 10%, the value could be \"1/10\"."
+    echo "    <TAX_LIMIT>   The value in lovelaces that will be used to limit the pool's tax."
+    echo "    <ACCOUNT_SK>  The Secret key of the Source address"
     exit 1
 fi
 
-REST_PORT="$1"
-TAX_VALUE="$2"
-TAX_RATIO="$3"
-TAX_LIMIT="$(expr 10 \* 1000000)"
+TAX_VALUE="$1"
+TAX_RATIO="$2"
+TAX_LIMIT="$3"
 ACCOUNT_SK="$4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
-
-REST_URL="http://127.0.0.1:${REST_PORT}/api"
-BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
-FEE_CONSTANT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
-FEE_COEFFICIENT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'coefficient:' | sed -e 's/^[[:space:]]*//' | sed -e 's/coefficient: //')
-FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate_pool_registration:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_pool_registration: //')
 
 ACCOUNT_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 ACCOUNT_ADDR=$($CLI address account ${ADDRTYPE} ${ACCOUNT_PK})
 
 echo "================Create Stake Pool================="
-echo "REST_PORT: ${REST_PORT}"
+echo "REST_URL: ${JORMUNGANDR_RESTAPI_URL}"
 echo "ACCOUNT_SK: ${ACCOUNT_SK}"
 echo "BLOCK0_HASH: ${BLOCK0_HASH}"
 echo "FEE_CONSTANT: ${FEE_CONSTANT}"
@@ -77,7 +69,7 @@ cat stake_pool.cert | $CLI certificate sign -k stake_key.sk >stake_pool.signcert
 cat stake_pool.signcert
 
 echo " ##5. Send the signed Stake Pool certificate to the blockchain"
-${SCRIPTPATH}/send-cert.sh ${REST_PORT} ${ACCOUNT_SK} stake_pool.cert
+${SCRIPTPATH}/register-pool-cert.sh ${ACCOUNT_SK} stake_pool.cert
 
 echo " ##6. Retrieve your stake pool id (NodeId)"
 cat stake_pool.cert | $CLI certificate get-stake-pool-id | tee stake_pool.id

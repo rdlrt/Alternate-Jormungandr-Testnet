@@ -7,35 +7,26 @@
 #  deployment, and is solely used for learning how the node and blockchain
 #  works, and how to interact with everything.
 #
-#  It also asumes that `jcli` is in the same folder with the script.
-#
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
 . $(dirname $0)/env
 
-if [ $# -ne 3 ]; then
-    echo "usage: $0 <REST-LISTEN-PORT> <ACCOUNT-SOURCE-SK> <CERTIFICATE-PATH>"
-    echo "    <REST-PORT>   The REST Listen Port set in node-config.yaml file (EX: 3101)"
+if [ $# -ne 2 ]; then
+    echo "usage: $0 <ACCOUNT-SOURCE-SK> <CERTIFICATE-PATH>"
     echo "    <ACCOUNT-SOURCE-SK>   The Secret key of the Source address"
     echo "    <CERT-PATH>   Path to a readable certificate file"
     exit 1
 fi
 
-REST_PORT="$1"
-ACCOUNT_SK="$2"
-CERTIFICATE_PATH="$3"
+ACCOUNT_SK="$1"
+CERTIFICATE_PATH="$2"
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
-REST_URL="http://127.0.0.1:${REST_PORT}/api"
-
-FEE_CONSTANT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
-FEE_COEFFICIENT=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'coefficient:' | sed -e 's/^[[:space:]]*//' | sed -e 's/coefficient: //')
-FEE_CERTIFICATE=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'certificate_pool_registration:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_pool_registration: //')
-BLOCK0_HASH=$($CLI rest v0 settings get -h "${REST_URL}" | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
+FEE_CERTIFICATE=$($CLI rest v0 settings get | grep 'certificate_pool_registration:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_pool_registration: //')
 
 echo "===============Send Certificate================="
 echo "CERTIFICATE_PATH: ${CERTIFICATE_PATH}"
-echo "REST_PORT: ${REST_PORT}"
+echo "REST_URL: ${JORMUNGANDR_RESTAPI_URL}"
 echo "ACCOUNT_SK: ${ACCOUNT_SK}"
 echo "BLOCK0_HASH: ${BLOCK0_HASH}"
 echo "FEE_CONSTANT: ${FEE_CONSTANT}"
@@ -63,7 +54,7 @@ ACCOUNT_PK=$(echo ${ACCOUNT_SK} | $CLI key to-public)
 ACCOUNT_ADDR=$($CLI address account ${ADDRTYPE} ${ACCOUNT_PK})
 
 # TODO we should do this in one call to increase the atomicity, but otherwise
-ACCOUNT_COUNTER=$( $CLI rest v0 account get "${ACCOUNT_ADDR}" -h "${REST_URL}" | grep '^counter:' | sed -e 's/counter: //' )
+ACCOUNT_COUNTER=$( $CLI rest v0 account get "${ACCOUNT_ADDR}" | grep '^counter:' | sed -e 's/counter: //' )
 
 # the account is going to pay for the fee ... so calculate how much
 ACCOUNT_AMOUNT=$((${FEE_CONSTANT} + ${FEE_COEFFICIENT} + ${FEE_CERTIFICATE}))
@@ -105,7 +96,7 @@ $CLI transaction info --fee-constant ${FEE_CONSTANT} --fee-coefficient ${FEE_COE
 echo " ##8. Finalize the transaction and send it to the blockchain"
 $CLI transaction seal --staging "${STAGING_FILE}"
 $CLI transaction auth -k ${WITNESS_SECRET_FILE} --staging "${STAGING_FILE}" 
-$CLI transaction to-message --staging "${STAGING_FILE}" | $CLI rest v0 message post -h "${REST_URL}"
+$CLI transaction to-message --staging "${STAGING_FILE}" | $CLI rest v0 message post
 
 echo " ##9. Remove the temporary files"
 rm ${STAGING_FILE} ${WITNESS_SECRET_FILE} ${WITNESS_OUTPUT_FILE}

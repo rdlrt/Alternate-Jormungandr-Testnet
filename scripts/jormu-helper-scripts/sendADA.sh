@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# This version of script is to reduce typing (ADA instead of lovelaces, and forced usage of $JORMUNGANDR_RESTAPI_URL)
-
 # Disclaimer:
 #
 #  The following use of shell script is for demonstration and understanding
@@ -9,18 +7,14 @@
 #  deployment, and is solely used for learning how the node and blockchain
 #  works, and how to interact with everything.
 #
-#  It also asumes that `jcli` is in the same folder with the script.
 #  The script works only for Account address types.
 #
 #  Tutorials can be found here: https://github.com/input-output-hk/shelley-testnet/wiki
 
 . $(dirname $0)/env
 
-[ -z ${JORMUNGANDR_RESTAPI_URL} ] && echo "[ERROR] - you must set the shell variable \$JORMUNGANDR_RESTAPI_URL ex: export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:3101/api" && exit 1
-
 if [ $# -ne 3 ]; then
   echo "usage: $0 <ACCOUNT_SK> <ADDRESS> <AMOUNT>"
-  echo ""
   echo "    <ACCOUNT_SK>   The Secret key of the Source address"
   echo "    <ADDRESS>     Address where to send the funds"
   echo "    <AMOUNT>      Amount to be sent (in lovelace) - tx fees will be paid by the source address"
@@ -32,11 +26,8 @@ DESTINATION_ADDRESS="$2"
 DESTINATION_AMOUNT="$(expr $3 \* 1000000)"
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
-BLOCK0_HASH=$($CLI rest v0 settings get | grep 'block0Hash:' | sed -e 's/^[[:space:]]*//' | sed -e 's/block0Hash: //')
-FEE_CONSTANT=$($CLI rest v0 settings get | grep 'constant:' | sed -e 's/^[[:space:]]*//' | sed -e 's/constant: //')
-FEE_COEFFICIENT=$($CLI rest v0 settings get | grep 'coefficient:' | sed -e 's/^[[:space:]]*//' | sed -e 's/coefficient: //')
-
 echo "================Send Money================="
+echo "REST_URL: ${JORMUNGANDR_RESTAPI_URL}"
 echo "DESTINATION_ADDRESS: ${DESTINATION_ADDRESS}"
 echo "DESTINATION_AMOUNT: ${DESTINATION_AMOUNT}"
 echo "ACCOUNT_SK: ${ACCOUNT_SK}"
