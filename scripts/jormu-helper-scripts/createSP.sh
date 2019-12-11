@@ -16,19 +16,19 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [ $# -ne 4 ]; then
-    echo "usage: $0 <TAX_VALUE> <TAX_RATIO> <TAX_LIMIT> <ACCOUNT_SK>"
+if [ $# -lt 1 ]; then
+    echo "usage: $0 <ACCOUNT_SK> [<TAX_VALUE> <TAX_RATIO> <TAX_LIMIT>]"
+    echo "    <ACCOUNT_SK>  The Secret key of the Source address"
     echo "    <TAX_VALUE>   The fixed cut (in lovelaces) the stake pool will take from the total reward."
     echo "    <TAX_RATIO>   The ratio of the remaining value that will be taken from the total, eg: For a value of 10%, the value could be \"1/10\"."
     echo "    <TAX_LIMIT>   The value in lovelaces that will be used to limit the pool's tax."
-    echo "    <ACCOUNT_SK>  The Secret key of the Source address"
     exit 1
 fi
 
-TAX_VALUE="$1"
-TAX_RATIO="$2"
-TAX_LIMIT="$3"
-ACCOUNT_SK="$4"
+ACCOUNT_SK=$1
+[[ ! -z "$2" ]] && TAX_VALUE="--tax-fixed $2"
+[[ ! -z "$3" ]] && TAX_RATIO="--tax-ratio $3"
+[[ ! -z "$4" ]] && TAX_LIMIT="--tax-limit $4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
@@ -59,7 +59,7 @@ echo POOL_KES_SK: ${POOL_KES_SK}
 echo POOL_KES_PK: ${POOL_KES_PK}
 
 echo " ##3. Create the Stake Pool certificate using above VRF and KEY public keys"
-$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 --tax-fixed ${TAX_VALUE} --tax-ratio ${TAX_RATIO} --tax-limit ${TAX_LIMIT} --management-threshold 1 >stake_pool.cert
+$CLI certificate new stake-pool-registration --kes-key ${POOL_KES_PK} --vrf-key ${POOL_VRF_PK} --owner ${ACCOUNT_PK} --start-validity 0 ${TAX_VALUE} ${TAX_RATIO} ${TAX_LIMIT} --management-threshold 1 >stake_pool.cert
 
 echo " ##4. Sign the Stake Pool certificate with the Stake Pool Owner private key"
 echo ${ACCOUNT_SK} > stake_key.sk
