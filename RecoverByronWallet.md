@@ -27,7 +27,9 @@ If it fails there are a few reasons we have found:
 get coffee...  It takes awhile
 
 5.  When its done, install executables to your path
-    stack install
+```
+stack install
+```
 
 6.  test to make sure cardano-wallet-jormungandr works fine and generate your new mnemonics you will need below.  Note that this generates 15 words as opposed to your byron era mnemnomics which were only 12 words.  
 
