@@ -1,22 +1,22 @@
-**Unofficial Instructions for recovering your Byron Era funds on the new Incentivized Shelley Testnet**
+# Unofficial Instructions for recovering your Byron Era funds on the new Incentivized Shelley Testnet
 
 
-1.  Grab and install Haskell
+## 1.  Grab and install Haskell
 ```
 curl -sSL https://get.haskellstack.org/ | sh
 ```
 
-2.  Get the wallet (you must build from source as of today as there are changes that just got into master you need)
+## 2.  Get the wallet (you must build from source as of today as there are changes that just got into master you need)
 ```
 git clone https://github.com/input-output-hk/cardano-wallet.git
 ```
 
-3.  Go into the wallet directory
+## 3.  Go into the wallet directory
 ```
 cd cardano-wallet
 ```
 
-4. Build the wallet
+## 4. Build the wallet
 ```
 stack build --test --no-run-tests
 ```
@@ -40,18 +40,18 @@ sudo apt install libsystemd-dev
 
 get coffee...  It takes awhile
 
-5.  When its done, install executables to your path
+## 5.  When its done, install executables to your path
 ```
 stack install
 ```
 
-6.  test to make sure cardano-wallet-jormungandr works fine and generate your new mnemonics you will need below.  Note that this generates 15 words as opposed to your byron era mnemnomics which were only 12 words.  
+## 6.  test to make sure cardano-wallet-jormungandr works fine and generate your new mnemonics you will need below.  Note that this generates 15 words as opposed to your byron era mnemnomics which were only 12 words.  
 
 ```
 cardano-wallet-jormungandr mnemonic generate
 ```
 
-7.  Launch the wallet as a service.  you can either open another terminal window or use screen or something.  anyway, wherever you run this next command you won't be able to use anymore for a terminal until you stop the wallet 
+## 7.  Launch the wallet as a service.  you can either open another terminal window or use screen or something.  anyway, wherever you run this next command you won't be able to use anymore for a terminal until you stop the wallet 
 
 change --node-port 3001 to wherever you have your jormungandr rest interface running.  for me it was 5001..  so
 
@@ -62,7 +62,7 @@ just to future proof these instructions.  genesis should be whatever genesis you
 ```
 cardano-wallet-jormungandr serve --node-port 3001 --port 3002 --genesis-block-hash e03547a7effaf05021b40dd762d5c4cf944b991144f1ad507ef792ae54603197
 ```
-8.  Restore your byron wallet:
+## 8.  Restore your byron wallet:
 
 --->in another window
 
@@ -76,7 +76,7 @@ curl -X POST -H "Content-Type: application/json" -d '{ "name": "legacy_wallet", 
 ```
 Thats going to spit out some information about a wallet it creates, you should see the value of your wallet - hopefully its not zero.  And you need the wallet ID for the next step
 
-9.  Create your shelley wallet:
+## 9.  Create your shelley wallet:
 
 Remember all those mnemnomics you made above.. put them here instead of all the foo's.
 
@@ -85,7 +85,7 @@ curl -X POST -H "Content-Type: application/json" -d '{ "name": "pool_wallet", "m
 ```
 Important thing to get is the wallet id from this command
 
-10.  Migrate your funds
+## 10.  Migrate your funds
 
 Now yuou are ready to migrate your wallet.  replace the ```<old wallet id>``` and ```<new wallet id>``` with the values you got above
 
@@ -93,7 +93,7 @@ Now yuou are ready to migrate your wallet.  replace the ```<old wallet id>``` an
 curl -X POST -H "Content-Type: application/json" -d '{"passphrase": "areallylongpassword"}' http://localhost:3002/v2/byron-wallets/<old wallet id>/migrations/<new wallet id>
 ```
 
-11.  Congratulations.  your funds are now in your new wallet.  From here you can send to another address created like we have been doing throughout the testnet process, or you can find a way to extract the private key from this wallet and use that.
+## 11.  Congratulations.  your funds are now in your new wallet.  From here you can send to another address created like we have been doing throughout the testnet process, or you can find a way to extract the private key from this wallet and use that.
 
 If you want to send to another address use the command below, but replace the address that you want to send it to, the amount, and your ```<new wallet id>```
 ```
