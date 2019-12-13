@@ -22,7 +22,6 @@ stack build --test --no-run-tests
 ```
 If it fails there are a few reasons we have found:
 - The cardano build instructions reference a few things that may be missing.  Check those.
-- You may not have libssl installed.  If you see a complaint like this ```a```
 - or maybe one of these would help:
 
 #### Libssl:
