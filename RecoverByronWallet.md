@@ -99,7 +99,13 @@ Now yuou are ready to migrate your wallet.  replace the ```<old wallet id>``` an
 curl -X POST -H "Content-Type: application/json" -d '{"passphrase": "areallylongpassword"}' http://localhost:3002/v2/byron-wallets/<old wallet id>/migrations/<new wallet id>
 ```
 
-## 11.  Congratulations.  your funds are now in your new wallet.  From here you can send to another address created like we have been doing throughout the testnet process, or you can find a way to extract the private key from this wallet and use that.
+## 11.  Congratulations.  your funds are now in your new wallet.  
+
+From here we recommend you send them to a new address entirely owned and created by jcli or whatever method you have been using for the testnet process.
+
+This technically may not be required.  But a lot of us did it and we know it works for setting up pools and stuff.
+
+send a small amount first just to make sure you are in control of the transaction and don't send your funds to la la land.
 
 If you want to send to another address use the command below, but replace the address that you want to send it to, the amount, and your ```<new wallet id>```
 ```
