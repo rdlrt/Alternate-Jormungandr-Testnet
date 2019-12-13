@@ -11,7 +11,7 @@
 
 . $(dirname $0)/env
 
-if  [ "$1" == "--help" ] || [ $# -ne 2 ]; then
+if  [ "$1" = "--help" ] || [ $# -ne 2 ]; then
     echo "usage: $0 <ACCOUNT_SK> <STAKE_POOL_ID>"
     echo "    <ACCOUNT_SK>     The Secret key of the Account address"
     echo "    <STAKE_POOL_ID>  The ID of the Stake Pool you want to delegate to"
