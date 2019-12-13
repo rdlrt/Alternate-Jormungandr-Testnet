@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Disclaimer:
 #
@@ -11,7 +11,7 @@
 
 . $(dirname $0)/env
 
-if  [[ $1 == *"-help"* ]] || [ $# -lt 2 ]; then
+if [[ $1 == *"-help" ]] || [ $# -lt 2 ]; then
     echo "usage: $0 <ACCOUNT_SK> <STAKE_POOL_IDS>"
     echo "    <ACCOUNT_SK>     The Secret key of the Account address"
     echo "    <STAKE_POOL_IDS> The ID and weight of the Stake Pools you want to delegate to in the format <pool_id_1>:1 > <pool_id_2>:1 ..."

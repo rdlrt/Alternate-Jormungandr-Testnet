@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Disclaimer:
 #
@@ -11,7 +11,7 @@
 
 . $(dirname $0)/env
 
-if  [[ $1 == *"-help"* ]] || [ $# -ne 2 ]; then
+if  [[ $1 == *"-help" ]] || [ $# -ne 2 ]; then
     echo "usage: $0 <ACCOUNT-SOURCE-SK> <CERTIFICATE-PATH>"
     echo "    <ACCOUNT-SOURCE-SK>   The Secret key of the Source address"
     echo "    <CERT-PATH>   Path to a readable certificate file"

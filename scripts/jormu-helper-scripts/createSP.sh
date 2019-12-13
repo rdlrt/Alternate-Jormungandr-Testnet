@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Disclaimer:
 #
@@ -16,7 +16,7 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [[ $1 == *"-help"* ]] || [ $# -lt 1 ]; then
+if [[ $1 == *"-help" ]] || [ $# -lt 1 ]; then
     echo ""
     echo "usage: $0 <ACCOUNT_SK> [<TAX_RATIO> <TAX_VALUE> <TAX_LIMIT>]"
     echo "    <ACCOUNT_SK>  The Secret key of the Source address"
