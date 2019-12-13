@@ -24,6 +24,7 @@ STAKE_POOL_ID="$2"
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 
 FEE_CERTIFICATE=$($CLI rest v0 settings get | grep 'certificate_owner_stake_delegation:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate_owner_stake_delegation: //')
+[[ -z "$FEE_CERTIFICATE" ]] && FEE_CERTIFICATE=$($CLI rest v0 settings get | grep 'certificate:' | sed -e 's/^[[:space:]]*//' | sed -e 's/certificate: //')
 
 echo "================DELEGATE ACCOUNT================="
 echo "REST_URL: ${JORMUNGANDR_RESTAPI_URL}"

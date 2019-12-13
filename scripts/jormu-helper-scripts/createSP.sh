@@ -17,17 +17,17 @@
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ $# -lt 1 ]; then
-    echo "usage: $0 <ACCOUNT_SK> [<TAX_VALUE> <TAX_RATIO> <TAX_LIMIT>]"
+    echo "usage: $0 <ACCOUNT_SK> [<TAX_RATIO> <TAX_VALUE> <TAX_LIMIT>]"
     echo "    <ACCOUNT_SK>  The Secret key of the Source address"
-    echo "    <TAX_VALUE>   The fixed cut (in lovelaces) the stake pool will take from the total reward."
     echo "    <TAX_RATIO>   The ratio of the remaining value that will be taken from the total, eg: For a value of 10%, the value could be \"1/10\"."
+    echo "    <TAX_VALUE>   The fixed cut (in lovelaces) the stake pool will take from the total reward."
     echo "    <TAX_LIMIT>   The value in lovelaces that will be used to limit the pool's tax."
     exit 1
 fi
 
 ACCOUNT_SK=$1
-[[ ! -z "$2" ]] && TAX_VALUE="--tax-fixed $2"
-[[ ! -z "$3" ]] && TAX_RATIO="--tax-ratio $3"
+[[ ! -z "$2" ]] && TAX_RATIO="--tax-ratio $2"
+[[ ! -z "$3" ]] && TAX_VALUE="--tax-fixed $3"
 [[ ! -z "$4" ]] && TAX_LIMIT="--tax-limit $4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
