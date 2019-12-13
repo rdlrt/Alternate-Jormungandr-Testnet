@@ -6,7 +6,9 @@
 curl -sSL https://get.haskellstack.org/ | sh
 ```
 
-## 2.  Get the wallet (you must build from source as of today as there are changes that just got into master you need)
+## 2.  Get the wallet 
+
+note:  you must build from source as of today as there are changes that just got into master you need
 ```
 git clone https://github.com/input-output-hk/cardano-wallet.git
 ```
@@ -51,13 +53,15 @@ get coffee...  It takes awhile
 stack install
 ```
 
-## 6.  test to make sure cardano-wallet-jormungandr works fine and generate your new mnemonics you will need below.  Note that this generates 15 words as opposed to your byron era mnemnomics which were only 12 words.  
+## 6.  Test to make sure cardano-wallet-jormungandr works fine.
+Generate your new mnemonics you will need below.  Note that this generates 15 words as opposed to your byron era mnemnomics which were only 12 words.  
 
 ```
 cardano-wallet-jormungandr mnemonic generate
 ```
 
-## 7.  Launch the wallet as a service.  you can either open another terminal window or use screen or something.  anyway, wherever you run this next command you won't be able to use anymore for a terminal until you stop the wallet 
+## 7.  Launch the wallet as a service.
+you can either open another terminal window or use screen or something.  anyway, wherever you run this next command you won't be able to use anymore for a terminal until you stop the wallet 
 
 change --node-port 3001 to wherever you have your jormungandr rest interface running.  for me it was 5001..  so
 
@@ -83,7 +87,6 @@ curl -X POST -H "Content-Type: application/json" -d '{ "name": "legacy_wallet", 
 Thats going to spit out some information about a wallet it creates, you should see the value of your wallet - hopefully its not zero.  And you need the wallet ID for the next step
 
 ## 9.  Create your shelley wallet:
-
 Remember all those mnemnomics you made above.. put them here instead of all the foo's.
 
 ```
@@ -92,7 +95,6 @@ curl -X POST -H "Content-Type: application/json" -d '{ "name": "pool_wallet", "m
 Important thing to get is the wallet id from this command
 
 ## 10.  Migrate your funds
-
 Now yuou are ready to migrate your wallet.  replace the ```<old wallet id>``` and ```<new wallet id>``` with the values you got above
 
 ```
@@ -100,7 +102,6 @@ curl -X POST -H "Content-Type: application/json" -d '{"passphrase": "areallylong
 ```
 
 ## 11.  Congratulations.  your funds are now in your new wallet.  
-
 From here we recommend you send them to a new address entirely owned and created by jcli or whatever method you have been using for the testnet process.
 
 This technically may not be required.  But a lot of us did it and we know it works for setting up pools and stuff.
