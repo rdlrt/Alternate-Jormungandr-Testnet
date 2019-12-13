@@ -11,7 +11,7 @@
 
 . $(dirname $0)/env
 
-if [ $# -ne 1 ]; then
+if  [[ $1 == *"-help"* ]] || [ $# -ne 1 ]; then
     echo "usage: $0 <ADDR_TYPE>"
     echo "    <ADDR_TYPE>   Type of address to be created: account or utxo"
     exit 1

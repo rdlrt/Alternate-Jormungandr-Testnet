@@ -16,12 +16,18 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [ $# -lt 1 ]; then
+if [[ $1 == *"-help"* ]] || [ $# -lt 1 ]; then
+    echo ""
     echo "usage: $0 <ACCOUNT_SK> [<TAX_RATIO> <TAX_VALUE> <TAX_LIMIT>]"
     echo "    <ACCOUNT_SK>  The Secret key of the Source address"
     echo "    <TAX_RATIO>   The ratio of the remaining value that will be taken from the total, eg: For a value of 10%, the value could be \"1/10\"."
     echo "    <TAX_VALUE>   The fixed cut (in lovelaces) the stake pool will take from the total reward."
     echo "    <TAX_LIMIT>   The value in lovelaces that will be used to limit the pool's tax."
+    echo ""
+    echo "examples:"
+    echo "    Specifying all parameters: $0 ed25519e_sk1... \"1/10\" 10 100"
+    echo "    Specifying only Tax Ratio: $0 ed25519e_sk1... \"1/10\" "
+    echo ""
     exit 1
 fi
 
