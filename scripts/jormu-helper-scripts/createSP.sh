@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Disclaimer:
 #
@@ -16,7 +16,7 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [[ $1 == *"-help" ]] || [ $# -lt 1 ]; then
+if [ "$1" == "--help" ] || [ $# -lt 1 ]; then
     echo ""
     echo "usage: $0 <ACCOUNT_SK> [<TAX_RATIO> <TAX_VALUE> <TAX_LIMIT>]"
     echo "    <ACCOUNT_SK>  The Secret key of the Source address"
@@ -32,9 +32,9 @@ if [[ $1 == *"-help" ]] || [ $# -lt 1 ]; then
 fi
 
 ACCOUNT_SK=$1
-[[ ! -z "$2" ]] && TAX_RATIO="--tax-ratio $2"
-[[ ! -z "$3" ]] && TAX_VALUE="--tax-fixed $3"
-[[ ! -z "$4" ]] && TAX_LIMIT="--tax-limit $4"
+[ ! -z "$2" ] && TAX_RATIO="--tax-ratio $2"
+[ ! -z "$3" ] && TAX_VALUE="--tax-fixed $3"
+[ ! -z "$4" ] && TAX_LIMIT="--tax-limit $4"
 
 [ -f ${ACCOUNT_SK} ] && ACCOUNT_SK=$(cat ${ACCOUNT_SK})
 

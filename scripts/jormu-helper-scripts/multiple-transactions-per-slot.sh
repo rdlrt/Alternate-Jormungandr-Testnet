@@ -16,7 +16,7 @@ INITIAL_TIP=""
 TX_COUNTER_SAME_SLOT=0
 INITIAL_SRC_COUNTER=0
 
-if  [[ $1 == *"-help" ]] || [ $# -ne 2 ]; then
+if [ "$1" == "--help" ]] || [ $# -ne 2 ]; then
   echo "usage: $0 <ACCOUNT_SK> <NO-OF-TRANSACTIONS>"
   echo "    <ACCOUNT_SK>         The Secret key of the Source Account address (for transactions)"
   echo "    <NO-OF-TRANSACTIONS> Number of transactions to be sent from Faucet to Account"
