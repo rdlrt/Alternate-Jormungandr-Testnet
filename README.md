@@ -13,7 +13,7 @@
   trusted_peers:
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4006
-      id: e869d9bf130315f6c1ee630d850aea45158688ce635deb3e
+      id: 0add359010d13fc0e9d403c822887638969276aaedccd1f4
     #homer_windows
     #- address: /ip4/194.223.37.87/tcp/4001
     #  id: 8f5d18d1b50941fb030e8e74876f7212874753f45bce4800
