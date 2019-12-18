@@ -12,6 +12,6 @@
 ```
   trusted_peers:
     #rdlrt
-    - address: /ip4/139.99.221.149/tcp/4006
+    - address: /ip4/139.99.221.149/tcp/4007
       id: 0add359010d13fc0e9d403c822887638969276aaedccd1f4
 ```
