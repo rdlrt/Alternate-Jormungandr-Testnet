@@ -14,4 +14,7 @@
     #rdlrt
     - address: /ip4/139.99.221.149/tcp/4007
       id: 0add359010d13fc0e9d403c822887638969276aaedccd1f4
+    #rcmorano
+    - address: /ip4//51.15.64.122tcp/8299
+      id: be6440b4953a7f862551a3d3a3e3ada55214317c57fdeb24
 ```
