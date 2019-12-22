@@ -22,17 +22,16 @@ PRINT_SCREEN()
 {
                 clear;
                 echo "$DATE   $HOSTN  Epoch:$lastBlockDateSlot - All OK! - "
-                LEADERS=$($CLI rest v0 leaders logs get)
-                SLOTS=$(echo $LEADERS | grep scheduled_at_time | wc -l)
-                NEXT_SLOTS=$(echo $LEADERS| grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
-                NEXT_SLOTS_LIST=$(echo $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
-                BLOCKS_MADE=$(echo $LEADERS | grep Block | wc |  awk '{print $1}');
+                SLOTS=$($CLI rest v0 leaders logs get | grep scheduled_at_time | wc -l);
+                NEXT_SLOTS=$($CLI rest v0 leaders logs get | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
+                NEXT_SLOTS_LIST=$($CLI rest v0 leaders logs get | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
+                BLOCKS_MADE=$($CLI rest v0 leaders logs get | grep Block | wc |  awk '{print $1}');
                 watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{print $ 5}' | cut -d ':' -f 1 | sort | uniq | wc -l);
-                BLOCKS_REJECTED=$(echo $LEADERS | grep Rejected | wc -l );
-                REASON_REJECTED=$(echo $LEADERS| grep -A1 Rejected );
+                BLOCKS_REJECTED=$($CLI rest v0 leaders logs get | grep Rejected | wc -l );
+                REASON_REJECTED=$($CLI rest v0 leaders logs get | grep -A1 Rejected );
                 echo "-> Uptime:$uptime                 - BlockHeight: --> $lastBlockHeight <--";
                 echo "-> LastBlockTx:$lastBlockTx       - txRecvCnt:$txRecvCnt ";
-                echo "->                       - blockRecvCnt:$blockRecvCnt";
+                echo "-> BlockRecvCnt:$blockRecvCnt"    -   ;
                 echo "-> Established:$nodesEstablished  - Uniq:$watch_node";
                 echo "-> Quarantined:$Quarantined       - NotPublic:$Quarantined_non_public";
                 echo " ";
@@ -57,8 +56,8 @@ INIT_JSTATS()
         lastBlockTx=$(cat $TMPF | jq -r .lastBlockTx)
         txRecvCnt=$(cat $TMPF | jq -r .txRecvCnt);
         nodesEstablished=$(cat $TMPF | jq '. | length')
-        Quarantined=$(curl -s http://127.0.0.1:3101/api/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
-        Quarantined_non_public=$(curl -s http://127.0.0.1:3101/api/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
+        Quarantined=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
+        Quarantined_non_public=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
         LAST_HASH=$($CLI rest v0 node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
 }
 
@@ -108,7 +107,6 @@ do
                                 fi
                         done
         else
-                clear;
                 INIT_JSTATS;
                 PRINT_SCREEN;
                 sleep $FREQ;
