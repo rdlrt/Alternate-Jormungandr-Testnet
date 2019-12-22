@@ -3,13 +3,20 @@
 # Author: Redoracle
 # Pool: Stakelovelace.io
 # TG: @redoracle
+# 
+# To keep logs of this WatchDog tool please use it as described below.
+# Usage: ./jstatus.sh | tee /tmp/jstatus.log  
 
-
-#Configuration Parameters
-
+# Configuration Parameters
 # Frequency:
-FREQ=90         # Normal Operation Refresh Frequency in seconds
-FORK_FREQ=120   # Forck Check Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
+FREQ=90              # Normal Operation Refresh Frequency in seconds
+FORK_FREQ=120        # Forck Check Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
+
+# Pre Recovery test cycles:
+RECOVERY_CYCLES=13      # How many times will test the Explorer Website with consecutive errors 
+
+# PATH of the temporary leaders logs from jcli for collecting stats
+LEADERS=/tmp/leaders_logs.log   
 
 CLI="$(which jcli)";
 
@@ -21,20 +28,21 @@ CLI="$(which jcli)";
 PRINT_SCREEN()
 {
                 clear;
-                echo "$DATE   $HOSTN  Epoch:$lastBlockDateSlot - All OK! - "
-                SLOTS=$($CLI rest v0 leaders logs get | grep scheduled_at_time | wc -l);
-                NEXT_SLOTS=$($CLI rest v0 leaders logs get | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
-                NEXT_SLOTS_LIST=$($CLI rest v0 leaders logs get | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
-                BLOCKS_MADE=$($CLI rest v0 leaders logs get | grep Block | wc |  awk '{print $1}');
+                echo -e "$DATE   $HOSTN  Epoch:$lastBlockDateSlot \\t- WatchDog - ";
+                LEADERS_QUERY=$($CLI rest v0 leaders logs get > $LEADERS);
+                SLOTS=$(cat $LEADERS | grep scheduled_at_time | wc -l);
+                NEXT_SLOTS=$(cat $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
+                NEXT_SLOTS_LIST=$(cat $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
+                BLOCKS_MADE=$(cat $LEADERS | grep Block | wc |  awk '{print $1}');
                 watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{print $ 5}' | cut -d ':' -f 1 | sort | uniq | wc -l);
-                BLOCKS_REJECTED=$($CLI rest v0 leaders logs get | grep Rejected | wc -l );
-                REASON_REJECTED=$($CLI rest v0 leaders logs get | grep -A1 Rejected );
-                echo "-> Uptime:$uptime                 - BlockHeight: --> $lastBlockHeight <--";
-                echo "-> LastBlockTx:$lastBlockTx       - txRecvCnt:$txRecvCnt ";
-                echo "-> BlockRecvCnt:$blockRecvCnt"    -   ;
-                echo "-> Established:$nodesEstablished  - Uniq:$watch_node";
-                echo "-> Quarantined:$Quarantined       - NotPublic:$Quarantined_non_public";
-                echo " ";
+                BLOCKS_REJECTED=$(cat $LEADERS | grep Rejected | wc -l );
+                REASON_REJECTED=$(cat $LEADERS | grep -A1 Rejected );
+                echo -e "-> Uptime:$uptime \\t\\t - BlockHeight: --> $lastBlockHeight <--";
+                echo -e "-> LastBlockTx:$lastBlockTx \\t\\t - txRecvCnt:$txRecvCnt ";
+                echo -e "-> BlockRecvCnt:$blockRecvCnt \\t\\t -   "       ;
+                echo -e "-> Established:$nodesEstablished \\t\\t - Uniq:$watch_node";
+                echo -e "-> Quarantined:$Quarantined \\t\\t - NotPublic:$Quarantined_non_public";
+                echo -e " ";
                 echo -e "-> Last Hash:\\n$LAST_HASH";
                 echo "-> Made:$BLOCKS_MADE - Rejected:$BLOCKS_REJECTED - Slots:$SLOTS - Planned(b/h):$NEXT_SLOTS";
                 echo "$NEXT_SLOTS_LIST";
@@ -50,12 +58,12 @@ INIT_JSTATS()
         TMPF="/tmp/stats.json";
         QUERY=$($CLI rest v0 node stats get --output-format json > $TMPF)
         lastBlockDateSlot=$( cat $TMPF | jq -r .lastBlockDate | cut -d "." -f 1)
-        blockRecvCnt=$(cat $TMPF | jq -r .blockRecvCnt)
-        lastBlockHeight=$(cat $TMPF | jq -r .lastBlockHeight)
-        uptime=$(cat $TMPF | jq -r .uptime)
-        lastBlockTx=$(cat $TMPF | jq -r .lastBlockTx)
+        blockRecvCnt=$(cat $TMPF | jq -r .blockRecvCnt);
+        lastBlockHeight=$(cat $TMPF | jq -r .lastBlockHeight);
+        uptime=$(cat $TMPF | jq -r .uptime);
+        lastBlockTx=$(cat $TMPF | jq -r .lastBlockTx);
         txRecvCnt=$(cat $TMPF | jq -r .txRecvCnt);
-        nodesEstablished=$(cat $TMPF | jq '. | length')
+        nodesEstablished=$(cat $TMPF | jq '. | length');
         Quarantined=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
         Quarantined_non_public=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
         LAST_HASH=$($CLI rest v0 node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
@@ -63,10 +71,10 @@ INIT_JSTATS()
 
 RECOVERY_RESTART()
 {
-                                                echo "-> We're ... Restarting!";
-                                                #Your recovery steps
-                                                #
-                                                TRY=47;
+          echo "-> We're ... Restarting!";
+          #Your recovery steps
+          #
+          TRY=47;
 }
 
 PAGER()
@@ -85,7 +93,7 @@ do
         then
                        echo "--> Evaluating Recovery Restart <--";
                        TRY=0;
-                        until [  $TRY -gt 13 ]; do
+                        until [  $TRY -gt $RECOVERY_CYCLES ]; do
                          LAST_HASH=$($CLI rest v0 node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
         curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data "{\"query\":\"\n    query {\n      block (id: \\\"$LAST_HASH\\\") {\n        id\n      }\n    }\n  \"}" | grep "\"block\":{\"id\":\"$LAST_HASH\"" &>> /tmp/check.log;
                                 if [ $? -gt 0 ];
