@@ -92,6 +92,7 @@ do
                                 if [ $? -gt 0 ];
                                 then
                                         let TRY+=1;
+                                        INIT_JSTATS;
                                         PRINT_SCREEN;
                                         echo "Attempt number: $TRY";
                                         echo "$DATE - Attention $LAST_HASH - NOT IN EXPLORER";
@@ -108,6 +109,7 @@ do
                         done
         else
                 clear;
+                INIT_JSTATS;
                 PRINT_SCREEN;
                 sleep $FREQ;
         fi;
