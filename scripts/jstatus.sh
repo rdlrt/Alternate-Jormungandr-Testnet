@@ -116,7 +116,7 @@ INIT_JSTATS()
         uptime=$(cat $TMPF | jq -r .uptime);
         lastBlockTx=$(cat $TMPF | jq -r .lastBlockTx);
         txRecvCnt=$(cat $TMPF | jq -r .txRecvCnt);
-        nodesEstablished=$(cat $TMPF | jq '. | length');
+        nodesEstablished=$(CLI network stats get --output-format json | jq '. | length');
         Quarantined=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
         Quarantined_non_public=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
         LAST_HASH=$(cat $TMPF | jq -r .lastBlockHash );
