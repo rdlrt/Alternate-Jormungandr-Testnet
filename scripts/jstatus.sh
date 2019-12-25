@@ -55,7 +55,6 @@ echo -e "\\t\\t$LGRAY1     Loading...  $NC\\n\\n";
 # Functions
 POOLTOOL()
 {
-sleep 5;
 if [[ $PoolToolHeight == "00000" ]]; 
 then
     BHEIGHT="\e[1;31m";
@@ -72,6 +71,7 @@ then
 else
     BHEIGHT="\e[1;32m";
 fi
+sleep 3;
 }
 
 PRINT_SCREEN()
@@ -196,6 +196,7 @@ do
                                         sleep $FORK_FREQ;
                                 else
                                         echo -e "-->$GREEN Restart Aborted $NC";
+                                        POOLTOOL;
                                         sleep 1;
                                         TRY=71;
                                 fi
