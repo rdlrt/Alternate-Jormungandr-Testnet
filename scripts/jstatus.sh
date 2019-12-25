@@ -44,17 +44,18 @@ THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 charact
 
 
 # Clolors
-
 BOLD="\e[1;37m"; GREEN="\e[1;32m"; POOLT="\e[1;44m"; RED="\e[1;31m"; ORANGE="\e[33;5m"; NC="\e[0m"; CYAN="\e[0;36m"; LGRAY1="\e[1;37m"; LGRAY="\e[2;37m"; BHEIGHT="\e[1;32m";
 REW="\e[1;93m";
+
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
 echo -e "\\t\\t$LGRAY1    v1.1   2019 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1     Loading...  $NC\\n\\n";
-# Functions
 
+# Functions
 POOLTOOL()
 {
+sleep 5;
 if [[ $PoolToolHeight == "00000" ]]; 
 then
     BHEIGHT="\e[1;31m";
@@ -65,14 +66,13 @@ else
 fi
 
 
-if [ $lastBlockHeight -lt $PoolToolHeight ]; 
+if [ "$lastBlockHeight" != "$PoolToolHeight" ]; 
 then
     BHEIGHT="\e[1;31m";
 else
     BHEIGHT="\e[1;32m";
 fi
 }
-
 
 PRINT_SCREEN()
 {
@@ -150,7 +150,7 @@ PAGER()
 {
     echo Pager;
     #Gotify example API
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
 }
 
 EXPLORER_CHECK()
@@ -170,6 +170,7 @@ while :
 do
         INIT_JSTATS;
         EXPLORER_CHECK;
+        POOLTOOL;
         if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]];
         then
                        echo "--> Evaluating Recovery Restart ";
@@ -177,7 +178,8 @@ do
                         until [  $TRY -gt $RECOVERY_CYCLES ]; do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
-                        if [ $RESU -gt 0 ];                                
+                        POOLTOOL;
+                        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]];                                
                                 then
                                         let TRY+=1;
                                         INIT_JSTATS;
@@ -200,7 +202,6 @@ do
                         done
         else
                 INIT_JSTATS;
-                POOLTOOL;
                 PRINT_SCREEN;
                 sleep $FREQ;
         fi;
