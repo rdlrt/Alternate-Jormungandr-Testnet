@@ -9,12 +9,17 @@
 #
 # - PoolTool sendtips.sh functions integrated if ENV vars are declared. 
 # - Fork/Sanity Check by cross referencing the last block hash in explorer and the Pooltool tip
-# - Visual feedbacks on Potential issues
+# 
 #
+# How the fork/stuck check works:
+# The script will retrieve  the last block hash elaborated by the node (jcli) and query the ITN IOHK eplorer to very the block hash  
+# In addition the node BlockHihgt is updated on PoolTool.io and simultaneosly using the return value and second reference before 
+# starting evaluating the Recovery Restart function.
 #
+# When exported the MY_POOL_ID variable, your pool's stats (rewards and stake) will show up on the screen 
 #
+# Do not forget to customize the RECOVERY_RESTART() function in order to implement your own recovery procedure.
 #
-
 # Init
 shopt -s expand_aliases
 alias CLI="$(which jcli) rest v0"
@@ -33,19 +38,19 @@ LEADERS=/tmp/leaders_logs.log   # PATH of the temporary leaders logs from jcli f
 
 #PoolTool Configuration
 THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 characters
-#export MY_POOL_ID="<YOUR-POOL-ID>"
-#export MY_USER_ID="<POOLTOOL-USER-ID>"  # on pooltool website get this from your account profile page
+#export MY_POOL_ID="YOUR-POOL-ID"
+#export MY_USER_ID="YOUR-POOLTOOL-ID"  # on pooltool website get this from your account profile page
 [ -z ${MY_POOL_ID} ] && echo -e "[WARN] - PoolTool parameters not set \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
 
 
-# Colors Palette
+# Clolors
 
 BOLD="\e[1;37m"; GREEN="\e[1;32m"; POOLT="\e[1;44m"; RED="\e[1;31m"; ORANGE="\e[33;5m"; NC="\e[0m"; CYAN="\e[0;36m"; LGRAY1="\e[1;37m"; LGRAY="\e[2;37m"; BHEIGHT="\e[1;32m";
 REW="\e[1;93m";
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
 echo -e "\\t\\t$LGRAY1    v1.1   2019 $NC\\n\\n";
-echo -e "\\t\\t$LGRAY1     Loading...  $NC";
+echo -e "\\t\\t$LGRAY1     Loading...  $NC\\n\\n";
 # Functions
 
 POOLTOOL()
@@ -68,6 +73,7 @@ else
 fi
 }
 
+
 PRINT_SCREEN()
 {
                 LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
@@ -86,9 +92,9 @@ PRINT_SCREEN()
                 echo -e " ";
                 echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$NC";
                 echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- PoolTHeight:\\t$POOLT-> $PoolToolHeight <-$NC";
-                echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- "       ;
+                echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC"       ;
                 echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC";
-                echo -e "-> Quarantined:\\t$ORANGE$Quarantined$NC \\t- $LASTREWARDS";
+                echo -e "$POOLINFO";
                 echo -e " ";
                 echo -e "-> Last Hash:\\n$LAST_HASH";
                 echo -e "-> Made:$GREEN$BLOCKS_MADE $NC- Rejected:$RED$BLOCKS_REJECTED$NC - Slots:$ORANGE$SLOTS$NC - Planned(b/h):$BOLD$NEXT_SLOTS$NC";
@@ -117,22 +123,26 @@ INIT_JSTATS()
 
         if [ $MY_POOL_ID ]; 
             then
-            LAST_EPOCH_POOL_REWARDS=$(CLI stake-pool get $MY_POOL_ID | grep value_taxed | awk '{print $2}' | awk '{print $1/1000000}');
+            LAST_EPOCH_POOL_REWARDS=$(CLI stake-pool get $MY_POOL_ID | grep value_taxed | awk '{print $2}' | awk '{print $1/1000000}' | cut -d "." -f 1 );
+            POOL_DELEGATED_STAKEQ=$(CLI stake-pool get $MY_POOL_ID | grep total_stake | awk '{print $2}' | awk '{print $1/1000000000}' | cut -d "." -f 1 );
+            POOL_DELEGATED_STAKE="Stake(K):\\t$REW$POOL_DELEGATED_STAKEQ$NC"
             LASTREWARDS="LastRewards:\\t$REW$LAST_EPOCH_POOL_REWARDS$NC";
+            POOLINFO="-> $POOL_DELEGATED_STAKE\\t- $LASTREWARDS"
             else
-            LASTREWARDS="";
+            POOLINFO="";
         fi
-
-
 }
 
 
 RECOVERY_RESTART()
 {
     echo "-> We're ... Restarting!";
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
-    sleep 2;
-    RECOVERY=$(echo recovery);
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
+    #jshutdown=$(CLI shutdown get);
+    #sleep 2;
+    #CLEANDB=$(rm -rf /datak/jormungandr-storage);
+    RECOVERY=$(echo recovery)
+    #START=$(start-pool &> /tmp/$HOSTN.log &);
     TRY=47;
 }
 
@@ -140,7 +150,7 @@ PAGER()
 {
     echo Pager;
     #Gotify example API
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
 }
 
 EXPLORER_CHECK()
@@ -156,14 +166,11 @@ else
 fi
 }
 
-
 while :
 do
         INIT_JSTATS;
-        sleep 1;
         EXPLORER_CHECK;
-        sleep 3;
-        if [ $RESU -gt 0 ] && [[ $PoolToolHeight -gt $lastBlockHeight || $PoolToolHeight == "000000" ]];
+        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]];
         then
                        echo "--> Evaluating Recovery Restart ";
                        TRY=0;
@@ -177,7 +184,7 @@ do
                                         POOLTOOL;
                                         PRINT_SCREEN;
                                         echo -e "Attempt number: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
-                                        if [ "$TRY" -eq "13" ];then
+                                        if [ "$TRY" -eq "$RECOVERY_CYCLES" ];then
                                             echo -e "$RED--> Attempt number $RECOVERY_CYCLES reached \\n --> Recovering...$NC";
                                             RECOVERY_RESTART;
                                         sleep 180;
@@ -186,11 +193,8 @@ do
                                         PAGER;
                                         sleep $FORK_FREQ;
                                 else
-                                        INIT_JSTATS;
-                                        POOLTOOL;
-                                        PRINT_SCREEN;
                                         echo -e "-->$GREEN Restart Aborted $NC";
-                                        sleep 3;
+                                        sleep 1;
                                         TRY=71;
                                 fi
                         done
