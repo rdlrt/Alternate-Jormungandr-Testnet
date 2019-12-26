@@ -34,7 +34,8 @@ FREQ=90              # Normal Operation Refresh Frequency in seconds
 FORK_FREQ=120        # Forck Check Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
 RECOVERY_CYCLES=13      # How many times will test the Explorer Website with consecutive errors
 
-LEADERS=/tmp/leaders_logs.log   # PATH of the temporary leaders logs from jcli for collecting stats
+LOG_DIRECTORY="/tmp"
+LEADERS="$LOG_DIRECTORY/leaders_logs.log"   # PATH of the temporary leaders logs from jcli for collecting stats
 
 #PoolTool Configuration
 THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 characters
@@ -64,8 +65,14 @@ else
     PoolToolHeight=$(curl -s -G $PoolToolURL | grep pooltool | cut -d "\"" -f 6);
 fi
 
+PoolToolStats=$(curl -s -X POST https://api.pooltool.io/dev/gettips?genesispref=8e4d2a3 > $LOG_DIRECTORY/pooltool_stats.json);
+PoolT_min=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .min );
+PoolT_syncd=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .syncd );
+PoolT_sample=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .samples );
+PoolT_max=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .max );
+POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> M:$PoolT_max - m:$PoolT_min - ($PoolT_syncd/$PoolT_sample) <-$NC";
 
-if [ "$lastBlockHeight" != "$PoolToolHeight" ]; 
+if [ "$lastBlockHeight" -lt $(($PoolT_max - 20)) ]; 
 then
     BHEIGHT="\e[1;31m";
 else
@@ -80,18 +87,20 @@ PRINT_SCREEN()
                 SLOTS=$(cat $LEADERS | grep scheduled_at_time | wc -l);
                 NEXT_SLOTS=$(cat $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
                 NEXT_SLOTS_LIST=$(cat $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
-                BLOCKS_MADE1=$(cat $LEADERS | grep -A 1 Block | grep block >> /tmp/$lastBlockDateSlot.leaders_logs.1 );
-                BLOCKS_MADE2=$(cat /tmp/$lastBlockDateSlot.leaders_logs.1 | grep block | sort | uniq > /tmp/$lastBlockDateSlot.leaders_logs );
-                BLOCKS_MADE=$(cat /tmp/$lastBlockDateSlot.leaders_logs | grep block | wc -l );
+                BLOCKS_MADE1=$(cat $LEADERS | grep -A 1 Block | grep block >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 );
+                BLOCKS_MADE2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 | grep block | sort | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs);
+                BLOCKS_MADE=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | grep block | wc -l );
                 watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{ print $5 }' | cut -d ':' -f 1 | sort | uniq | wc -l);
-                BLOCKS_REJECTED=$(cat $LEADERS | grep Rejected | wc -l );
+                BLOCKS_REJECTED1=$(cat $LEADERS | grep -B3 Rejected | grep scheduled_at_time >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs);
+                BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs);
+                BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
                 REASON_REJECTED=$(cat $LEADERS | grep -A1 Rejected );
                 clear;
                 echo -e "-> $DATE \\t $STATUS";
                 echo -e "-> HOST:$BOLD$HOSTN$NC   Epoch:$BOLD$lastBlockDateSlot$NC   Uptime:$BOLD$uptime$NC  ";
                 echo -e " ";
                 echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$NC";
-                echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- PoolTHeight:\\t$POOLT-> $PoolToolHeight <-$NC";
+                echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
                 echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC"       ;
                 echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC";
                 echo -e "$POOLINFO";
@@ -108,7 +117,7 @@ INIT_JSTATS()
         ORA=$(date +"%H");
         HOSTN=$(hostname);
         DAY=$(date +"%d");
-        TMPF="/tmp/stats.json";
+        TMPF="$LOG_DIRECTORY/stats.json";
         QUERY=$(CLI  node stats get --output-format json > $TMPF)
         lastBlockDateSlot=$( cat $TMPF | jq -r .lastBlockDate | cut -d "." -f 1)
         blockRecvCnt=$(cat $TMPF | jq -r .blockRecvCnt);
@@ -139,10 +148,10 @@ RECOVERY_RESTART()
     echo "-> We're ... Restarting!";
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
     #jshutdown=$(CLI shutdown get);
-    #sleep 2;
-    #CLEANDB=$(rm -rf /datak/jormungandr-storage);
+    sleep 2;
+    #CLEANDB=$(rm -rf /tmp/jormungandr-storage);
     RECOVERY=$(echo recovery)
-    #START=$(start-pool &> /tmp/$HOSTN.log &);
+    #START=$(start-pool &> $LOG_DIRECTORY/$HOSTN.log &);
     TRY=47;
 }
 
@@ -150,12 +159,12 @@ PAGER()
 {
     echo Pager;
     #Gotify example API
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
 }
 
 EXPLORER_CHECK()
 {
-curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data "{\"query\":\"\n    query {\n      block (id: \\\"$LAST_HASH\\\") {\n        id\n      }\n    }\n  \"}" | grep "\"block\":{\"id\":\"$LAST_HASH\"" &> /tmp/explorer.check.log;
+curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data "{\"query\":\"\n    query {\n      block (id: \\\"$LAST_HASH\\\") {\n        id\n      }\n    }\n  \"}" | grep "\"block\":{\"id\":\"$LAST_HASH\"" &> $LOG_DIRECTORY/explorer.check.log;
 RESU=$?;
 
 if [ $RESU -gt 0 ]; 
@@ -171,7 +180,7 @@ do
         INIT_JSTATS;
         EXPLORER_CHECK;
         POOLTOOL;
-        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]];
+        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - 20)) ];
         then
                        echo "--> Evaluating Recovery Restart ";
                        TRY=0;
@@ -179,7 +188,7 @@ do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
                         POOLTOOL;
-                        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]];                                
+                        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - 20)) ];                                
                                 then
                                         let TRY+=1;
                                         INIT_JSTATS;
