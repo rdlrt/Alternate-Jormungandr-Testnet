@@ -20,47 +20,83 @@
 #
 # Do not forget to customize the RECOVERY_RESTART() function in order to implement your own recovery procedure.
 #
-# Init
+# Featuers:
+#              - Node on a fork (by simultaneolsy checking PoolTool and ShellyExplorer)
+#              - Node Stuck by setting mex block heghit difference "Block_diff" (default 100)
+#              - IM samples for Gotify and Telegram (thanks to @Gufmar)
+#
+# Disclaimers: TODO
+#
+#
+## Configuration Parameters 
+
+GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
+
+## PoolTool Configuration
+THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 characters
+#export MY_POOL_ID="YOUR-POOL-ID"   # Your Pool public IP
+#export MY_USER_ID="YOUR-POOLTOOL-ID"  # on pooltool website get this from your account profile page
+
+[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
+
+## Telegram Message API 
+#
+# Talk with @BotFather and a create a new bot with the command "/newbot" follow the procedure and keep notes of your BotToken
+# Then invite @Markdown @RawDataBot and also get the "chat_id"
+# This is an individual chat-ID between the bot and this TG-user the bot is allowed to respond, when the user send a first message.
+# write some messages within your botchat group and then run the following command
+# curl -s https://api.telegram.org/bot${TG_BotToken}/getUpdates | jq .
+# the returned JSON contains the chat-ID from the last message the bot received.
+# or get get directly the chat_id:
+# curl -s https://api.telegram.org/bot${TG_BotToken}/getUpdates | jq . | grep -A1 chat | grep -m 1 id | awk '{print $2}' | cut -d "," -f1
+#TG_BotToken="xxxxxxxxx:xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxx"
+#TG_ChatId="xxxxxxxxx"
+##TG_URL="https://api.telegram.org/bot${TG_BotToken}/sendMessage?chat_id=${TG_ChatId}&parse_mode=Markdown"
+
+ALERT_MINIMUM=0      # minimum test loops pefore pager alert
+
+## Cycles Time frequency in seconds:
+FREQ=90                 # Normal Operation Refresh Frequency in seconds
+FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
+RECOVERY_CYCLES=13      # How many times will test the Explorer Website with consecutive errors
+
+## Block difference checks for stucked nodes
+#
+Block_diff=100  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
+Block_delay=20  # Block_delay is part of the double check algorith with the comparison of the shellyExplorer (the combination of 1 Hash not found and Lastblock heigh < 20 blocks trigger 1 of 13 consecutives alerts before triggering the recovery)
+
+
+## Log PATH
+#
+LOG_DIRECTORY="/tmp"
+LEADERS="$LOG_DIRECTORY/leaders_logs.log"   # PATH of the temporary leaders logs from jcli for collecting stats
+
+## Clolors palette
+#
+BOLD="\e[1;37m"; GREEN="\e[1;32m"; RED="\e[1;31m"; ORANGE="\e[33;5m"; NC="\e[0m"; CYAN="\e[0;36m"; LGRAY1="\e[1;37m"; LGRAY="\e[2;37m"; BHEIGHT="\e[1;32m";
+REW="\e[1;93m"; POOLT="\e[1;44m";
+
+## Main Init
+#
 shopt -s expand_aliases
 alias CLI="$(which jcli) rest v0"
 
 [ -f CLI ] && [ -f jcli ] && CLI="./jcli"
 [ -z ${JORMUNGANDR_RESTAPI_URL} ] && echo -e "[ERROR] - you must set the shell variable \$JORMUNGANDR_RESTAPI_URL, \\ncheck your node config for the rest: listen_address to identify the URL, \\neg: export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:3101/api" && exit 1
 
-#Configuration Parameters
-GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
-# Frequency:
-FREQ=90              # Normal Operation Refresh Frequency in seconds
-FORK_FREQ=120        # Forck Check Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
-RECOVERY_CYCLES=13      # How many times will test the Explorer Website with consecutive errors
-
-LOG_DIRECTORY="/tmp"
-LEADERS="$LOG_DIRECTORY/leaders_logs.log"   # PATH of the temporary leaders logs from jcli for collecting stats
-
-#PoolTool Configuration
-THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 characters
-#export MY_POOL_ID="YOUR-POOL-ID"
-#export MY_USER_ID="YOUR-POOLTOOL-ID"  # on pooltool website get this from your account profile page
-[ -z ${MY_POOL_ID} ] && echo -e "[WARN] - PoolTool parameters not set \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
-
-
-# Clolors
-BOLD="\e[1;37m"; GREEN="\e[1;32m"; POOLT="\e[1;44m"; RED="\e[1;31m"; ORANGE="\e[33;5m"; NC="\e[0m"; CYAN="\e[0;36m"; LGRAY1="\e[1;37m"; LGRAY="\e[2;37m"; BHEIGHT="\e[1;32m";
-REW="\e[1;93m";
-
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
 echo -e "\\t\\t$LGRAY1    v1.1   2019 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1     Loading...  $NC\\n\\n";
 
-# Functions
+
+## Functions
 POOLTOOL()
 {
 if [[ $PoolToolHeight == "00000" ]]; 
 then
     BHEIGHT="\e[1;31m";
 else
-    #PTlastBlockHeight=$(CLI node stats get --output-format json | jq -r .lastBlockHeight)
     PoolToolURL="https://tamoq3vkbl.execute-api.us-west-2.amazonaws.com/prod/sharemytip?poolid=$MY_POOL_ID&userid=$MY_USER_ID&genesispref=$THIS_GENESIS&mytip=$lastBlockHeight";
     PoolToolHeight=$(curl -s -G $PoolToolURL | grep pooltool | cut -d "\"" -f 6);
 fi
@@ -95,6 +131,22 @@ PRINT_SCREEN()
                 BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs);
                 BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
                 REASON_REJECTED=$(cat $LEADERS | grep -A1 Rejected );
+                if [ $BLOCKS_REJECTED_TMP ]; 
+                then 
+                    if [ $BLOCKS_REJECTED -gt $BLOCKS_REJECTED_TMP ];
+                    then
+                        PAGER_BLOCK_REJ;
+                    fi
+                    BLOCKS_REJECTED_TMP="$BLOCKS_REJECTED"
+                fi
+                if [ $BLOCKS_MADE_TMP ]; 
+                then 
+                    if [ $BLOCKS_MADE -gt $BLOCKS_MADE_TMP ];
+                    then
+                        PAGER_BLOCK_MADE;
+                    fi
+                    BLOCKS_MADE_TMP="$BLOCKS_MADE"
+                fi
                 clear;
                 echo -e "-> $DATE \\t $STATUS";
                 echo -e "-> HOST:$BOLD$HOSTN$NC   Epoch:$BOLD$lastBlockDateSlot$NC   Uptime:$BOLD$uptime$NC  ";
@@ -146,20 +198,34 @@ INIT_JSTATS()
 RECOVERY_RESTART()
 {
     echo "-> We're ... Restarting!";
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
-    #jshutdown=$(CLI shutdown get);
+    AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
+    jshutdown=$(CLI shutdown get);
     sleep 2;
-    #CLEANDB=$(rm -rf /tmp/jormungandr-storage);
+    CLEANDB=$(rm -rf /datak/jormungandr-storage);
     RECOVERY=$(echo recovery)
-    #START=$(start-pool &> $LOG_DIRECTORY/$HOSTN.log &);
+    START=$(start-pool &> $LOG_DIRECTORY/$HOSTN.log &);
     TRY=47;
 }
 
 PAGER()
 {
     echo Pager;
-    #Gotify example API
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+    ##Telegram
+    #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max");
+    ##Gotify
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+}
+
+PAGER_BLOCK_MADE()
+{
+        echo "New block made";
+        #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Block just Made N:$BLOCKS_MADE %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: POOLINFO");
+}
+
+PAGER_BLOCK_REJ()
+{
+        echo "New block rejected";
+        #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: POOLINFO");
 }
 
 EXPLORER_CHECK()
@@ -175,12 +241,16 @@ else
 fi
 }
 
+## Main process ##
+#      v1.1      #
+#    12/2019     #
+##################
 while :
 do
         INIT_JSTATS;
         EXPLORER_CHECK;
         POOLTOOL;
-        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - 20)) ];
+        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ] || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
         then
                        echo "--> Evaluating Recovery Restart ";
                        TRY=0;
@@ -188,7 +258,7 @@ do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
                         POOLTOOL;
-                        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - 20)) ];                                
+                        if [ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ] || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
                                 then
                                         let TRY+=1;
                                         INIT_JSTATS;
@@ -200,8 +270,13 @@ do
                                             RECOVERY_RESTART;
                                         sleep 180;
                                         fi
+                                        
                                         #YOUR pager
-                                        PAGER;
+                                        if [ "$TRY" -gt "$ALERT_MINIMUM" ];
+                                        then
+                                            PAGER;
+                                        fi
+
                                         sleep $FORK_FREQ;
                                 else
                                         echo -e "-->$GREEN Restart Aborted $NC";
