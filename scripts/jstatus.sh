@@ -24,9 +24,12 @@
 #              - IM samples for Gotify and Telegram (thanks to @Gufmar)
 #
 # Notes: the msg " HASH NOT IN ESPLORER" could happen in 3 different situations:
-#           - The HAST is not yet in Shelly Exporer (usually after few minutes the alert reset because the scripts retries and finds it)
-#           - The HAST is not yet in Shelly Exporer and never will be because you on a fork
-#           - Shelly Exporer Webserver is not responding (usually after few minutes the alert reset because the scripts retries and finds it)
+#           - 1) The HAST is not yet in Shelly Exporer, not in sync (usually after few minutes the alert reset because the scripts 
+#                retries and finds it)
+#           - 2) Shelly Exporer Webserver is not responding (usually after few minutes the alert reset because the scripts retries 
+#                and finds it)
+#           - 3) The HAST is not yet in Shelly Exporer and never will be because your node is on a fork, for making sure we do not 
+#                get False Positive we also check PoolTool - Very Useful Tool -.
 #
 #   
 #
@@ -37,6 +40,9 @@
 #               3)   -->!!    USE THIS SCRIPT AT YOUR OWN RISK. IT IS YOUR OWN RESPONSABILITY TO MONITOR YOUR NODE!    !!<--
 #
 # Contributors: @Cardano_Staking_Pools_Alliance SPAI
+#
+## Shelly Explorer:
+# https://explorer.incentivized-testnet.iohkdev.io/explorer/
 #
 ## Configuration Parameters 
 GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
@@ -67,9 +73,16 @@ THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 charact
 ALERT_MINIMUM=0      # minimum test loops pefore pager alert
 
 ## Cycles Time frequency in seconds:
-FREQ=90                 # Normal Operation Refresh Frequency in seconds
-FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 failed attepts to check the block hash, the script will try to do recovery steps if any.
-RECOVERY_CYCLES=13      # How many times will test the Explorer Website with consecutive errors
+FREQ=60                 # Normal Operation Refresh Frequency in seconds
+
+FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
+                        # the last block hash the script will try to do the recovery steps if any. See RECOVERY_RESTART().
+
+RECOVERY_CYCLES=13      # How many times will the test cycle (Explorer Website check  + PoolTool check) with consecutive errors
+                        # the script will try to do the recovery steps if any. See RECOVERY_RESTART()
+
+FLATCYCLES=5            # Every Cycle FREQ lastblockheight will be checked and if it stays the same for FLATCYCLES times, 
+                        # than the Monster will be Unleashed! 
 
 ## Block difference checks for stucked nodes
 #
@@ -97,7 +110,7 @@ alias CLI="$(which jcli) rest v0"
 
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
-echo -e "\\t\\t$LGRAY1   v1.1.1   2019 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1   v1.1.2   2019 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1    Loading...  $NC\\n\\n";
 
 
@@ -130,33 +143,20 @@ sleep 3;
 PRINT_SCREEN()
 {
                 LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
-                SLOTS=$(cat $LEADERS | grep -B1 Pending | grep scheduled_at_time | wc -l);
+                SLOTS=$(cat $LEADERS | grep -B2 Pending | grep -A1 "scheduled_at_date:" | grep -A1 "$lastBlockDateSlot\." | grep scheduled_at_time | wc -l);
                 NEXT_SLOTS=$(cat $LEADERS | grep -A 1 scheduled_at_time  | grep $DAY'T'$ORA | wc -l);
                 NEXT_SLOTS_LIST=$(cat $LEADERS | grep scheduled_at_time  | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
-                BLOCKS_MADE1=$(cat $LEADERS | grep -A 1 Block | grep block | cut -d ":" -f 2 >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 );
+                BLOCKS_MADE1=$(cat $LEADERS | grep -A1 -B3 Block | grep -A5 "scheduled_at_date:" | grep -A4 "$lastBlockDateSlot\." | grep block | cut -d ":" -f 2 >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 );
                 BLOCKS_MADE2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 | sort | uniq  > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs);
-                if [ -f $LOG_DIRECTORY/$(($lastBlockDateSlot - 1)).leaders_logs ]
-                then
-                    IFS=$'\n';
-                    for i in $(cat $LOG_DIRECTORY/$(($lastBlockDateSlot - 1)).leaders_logs);
-                    do
-                        grep -v "$i" $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def1;
-                    done
-                    BLOCKS_UNIQ=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def1 | sort | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def );
-                    cp $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs;
-                    cp $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1;
-               fi
                 BLOCKS_MADE=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | wc -l );
                 watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{ print $5 }' | cut -d ':' -f 1 | sort | uniq | wc -l);
-                BLOCKS_REJECTED1=$(cat $LEADERS | grep -B3 Rejected | grep scheduled_at_time >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs);
+                BLOCKS_REJECTED1=$(cat $LEADERS | grep -B3 Rejected | grep -A1 "$lastBlockDateSlot\."| grep scheduled_at_time >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs);
                 BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs);
                 BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
                 REASON_REJECTED=$(cat $LEADERS | grep -A1 Rejected );
-                rm $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs_def1; # Reset Made Stats
-                mv $LOG_DIRECTORY/$(($lastBlockDateSlot - 1)).leaders_logs $LOG_DIRECTORY/$(($lastBlockDateSlot - 1)).leaders_logs.done;
                 clear;
                 echo -e "-> $DATE \\t $STATUS";
-                echo -e "-> HOST:$BOLD$HOSTN$NC   Epoch:$BOLD$lastBlockDateSlot$NC   Uptime:$BOLD$uptime$NC  ";
+                echo -e "-> HOST:$BOLD$HOSTN$NC   Epoch:$BOLD$lastBlockDateSlotFull$NC   Uptime:$BOLD$uptime$NC  ";
                 echo -e " ";
                 echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$NC";
                 echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
@@ -177,8 +177,9 @@ INIT_JSTATS()
         HOSTN=$(hostname);
         DAY=$(date +"%d");
         TMPF="$LOG_DIRECTORY/stats.json";
-        QUERY=$(CLI  node stats get --output-format json > $TMPF)
-        lastBlockDateSlot=$( cat $TMPF | jq -r .lastBlockDate | cut -d "." -f 1)
+        QUERY=$(CLI  node stats get --output-format json > $TMPF);
+        lastBlockDateSlot=$( cat $TMPF | jq -r .lastBlockDate | cut -d "." -f 1);
+        lastBlockDateSlotFull=$( cat $TMPF | jq -r .lastBlockDate )
         blockRecvCnt=$(cat $TMPF | jq -r .blockRecvCnt);
         lastBlockHeight=$(cat $TMPF | jq -r .lastBlockHeight);
         uptime=$(cat $TMPF | jq -r .uptime);
@@ -207,7 +208,7 @@ RECOVERY_RESTART()
     echo "-> We're ... Restarting!";
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
     #jshutdown=$(CLI shutdown get);
-    sleep 2;
+    #sleep 2;
     #CLEANDB=$(rm -rf /datak/jormungandr-storage);
     #RECOVERY=$(echo recovery)
     #START=$(start-pool &> $LOG_DIRECTORY/$HOSTN.log &);
@@ -218,27 +219,27 @@ PAGER()
 {
     echo Pager;
     ##Telegram
-    #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: $POOLINFO");
+    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: %0ADS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     ##Gotify
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH: $LAST_HASH" -F "priority=$TRY");
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH:$LAST_HASH PTH:$PoolT_max DS:$POOL_DELEGATED_STAKEQ LR:$LAST_EPOCH_POOL_REWARDS" -F "priority=$TRY");
 }
 
 PAGER_BLOCK_MADE()
 {
-        echo "New block made";
+        echo -e "\\n-> New block made";
         ##Telegram
-        #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Block just Made N:$BLOCKS_MADE %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: $POOLINFO");
-        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Block just Made" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: $POOLINFO" -F "priority=$TRY");
+        #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Made N: $BLOCKS_MADE %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: %0ADS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
+        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Block just Made" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE PTH:$PoolT_max DS:$POOL_DELEGATED_STAKEQ LR:$LAST_EPOCH_POOL_REWARDS" -F "priority=5");
 
 }
 
 PAGER_BLOCK_REJ()
 {
-        echo "New block rejected";
+        echo -e "\\n-> New block rejected";
         ##Telegram
-        #TGAUE=$(curl -s -X POST ${TG_URL} -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: $POOLINFO");
+        #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: %0ADS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
         ##Gotify
-        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: $POOLINFO" -F "priority=$TRY");
+        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE POOLTHEIGHT: $PoolT_max" -F "priority=8");
 }
 
 EXPLORER_CHECK()
@@ -246,16 +247,39 @@ EXPLORER_CHECK()
 curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data "{\"query\":\"\n    query {\n      block (id: \\\"$LAST_HASH\\\") {\n        id\n      }\n    }\n  \"}" | grep "\"block\":{\"id\":\"$LAST_HASH\"" &> $LOG_DIRECTORY/explorer.check.log;
 RESU=$?;
 
-if [ $RESU -gt 0 ]; 
-then
+if [ $RESU -gt 0 ]; then
     STATUS="$RED- HASH NOT IN EPLORER! -$NC"
+elif [[ $FLATLINERSCOUNTER -gt 3 ]]; then
+    STATUS="$RED- FLATLINER DETECTED! n:$FLATLINERSCOUNTER -$NC"
 else
     STATUS="$GREEN - Looking Good! - $NC"
 fi
 }
 
+EVAL_PAGE_BLOCK()
+{
+if [ $BLOCKS_REJECTED -gt $BLOCKS_REJECTED_TMP ]; then
+    PAGER_BLOCK_REJ;
+    BLOCKS_REJECTED_TMP="$BLOCKS_REJECTED";
+else
+    BLOCKS_REJECTED_TMP="$BLOCKS_REJECTED";
+fi
+    
+if [ $BLOCKS_MADE -gt $BLOCKS_MADE_TMP ]; then
+    PAGER_BLOCK_MADE;
+    BLOCKS_MADE_TMP="$BLOCKS_MADE";
+else
+    BLOCKS_MADE_TMP="$BLOCKS_MADE";
+fi
+}
+
+## Reset Variables
+BLOCKS_MADE_TMP=0;
+BLOCKS_REJECTED_TMP=0;
+FLATLINERS=0;
+FLATLINERSCOUNTER=0;
 ## Main process ##
-#    v1.1.1      #
+#      v1.1      #
 #    12/2019     #
 ##################
 while :
@@ -263,7 +287,13 @@ do
         INIT_JSTATS;
         EXPLORER_CHECK;
         POOLTOOL;
-        if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
+        if [ $lastBlockHeight -eq $FLATLINERS ];
+        then
+            let FLATLINERSCOUNTER+=1;
+        else 
+            FLATLINERS="$lastBlockHeight";
+        fi 
+        if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
         then
                        echo "--> Evaluating Recovery Restart ";
                        TRY=0;
@@ -271,10 +301,10 @@ do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
                         POOLTOOL;
-
-                                if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
+                                if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
                                 then
                                         let TRY+=1;
+                                        let FLATLINERS+=1;
                                         INIT_JSTATS;
                                         POOLTOOL;
                                         PRINT_SCREEN;
@@ -302,27 +332,7 @@ do
         else
                 INIT_JSTATS;
                 PRINT_SCREEN;
-                if [ $BLOCKS_REJECTED_TMP ]; 
-                then 
-                    if [ $BLOCKS_REJECTED -gt $BLOCKS_REJECTED_TMP ];
-                    then
-                        PAGER_BLOCK_REJ;
-                    fi
-                else
-                    BLOCKS_MADE_TMP="$BLOCKS_MADE_TMP";
-                fi
-
-                if [ $BLOCKS_MADE_TMP ]; 
-                then 
-                    if [ $BLOCKS_MADE -gt $BLOCKS_MADE_TMP ];
-                    then
-                        PAGER_BLOCK_MADE;
-                    fi
-                else
-                    BLOCKS_MADE_TMP="$BLOCKS_MADE_TMP";
-                fi
-                #echo "$BLOCKS_MADE_TMP - $BLOCKS_MADE";
-                #echo "$BLOCKS_REJECTED_TMP - $BLOCKS_REJECTED";
+                EVAL_PAGE_BLOCK;
                 sleep $FREQ;
         fi;
 done
