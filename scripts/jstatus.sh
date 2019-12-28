@@ -278,6 +278,8 @@ BLOCKS_MADE_TMP=0;
 BLOCKS_REJECTED_TMP=0;
 FLATLINERS=0;
 FLATLINERSCOUNTER=0;
+TRY=0;
+
 ## Main process ##
 #      v1.1      #
 #    12/2019     #
@@ -290,13 +292,13 @@ do
         if [ $lastBlockHeight -eq $FLATLINERS ];
         then
             let FLATLINERSCOUNTER+=1;
+            let TRY+=1;
         else 
             FLATLINERS="$lastBlockHeight";
         fi 
         if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
         then
                        echo "--> Evaluating Recovery Restart ";
-                       TRY=0;
                         until [  $TRY -gt $RECOVERY_CYCLES ]; do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
@@ -304,7 +306,7 @@ do
                                 if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
                                 then
                                         let TRY+=1;
-                                        let FLATLINERS+=1;
+                                        let FLATLINERSCOUNTER+=1;
                                         INIT_JSTATS;
                                         POOLTOOL;
                                         PRINT_SCREEN;
