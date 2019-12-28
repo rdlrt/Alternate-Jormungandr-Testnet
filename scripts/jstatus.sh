@@ -5,7 +5,7 @@
 # TG: @redoracle
 #
 # To keep logs of this WatchDog tool please use it as described below.
-# Usage: ./jstatus.sh | tee /tmp/jstatus.log
+# Usage: ./jstatus.sh | tee -a /tmp/jstatus.log
 #
 #
 # How the fork/stuck check works:
@@ -73,7 +73,7 @@ THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 charact
 ALERT_MINIMUM=0      # minimum test loops pefore pager alert
 
 ## Cycles Time frequency in seconds:
-FREQ=60                 # Normal Operation Refresh Frequency in seconds
+FREQ=90                 # Normal Operation Refresh Frequency in seconds
 
 FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
                         # the last block hash the script will try to do the recovery steps if any. See RECOVERY_RESTART().
@@ -81,7 +81,7 @@ FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in second
 RECOVERY_CYCLES=13      # How many times will the test cycle (Explorer Website check  + PoolTool check) with consecutive errors
                         # the script will try to do the recovery steps if any. See RECOVERY_RESTART()
 
-FLATCYCLES=5            # Every Cycle FREQ lastblockheight will be checked and if it stays the same for FLATCYCLES times, 
+FLATCYCLES=8            # Every Cycle FREQ lastblockheight will be checked and if it stays the same for FLATCYCLES times, 
                         # than the Monster will be Unleashed! 
 
 ## Block difference checks for stucked nodes
@@ -110,7 +110,7 @@ alias CLI="$(which jcli) rest v0"
 
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
-echo -e "\\t\\t$LGRAY1   v1.1.2   2019 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1   v1.1.3   2019 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1    Loading...  $NC\\n\\n";
 
 
@@ -207,19 +207,20 @@ RECOVERY_RESTART()
 {
     echo "-> We're ... Restarting!";
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
+    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     #jshutdown=$(CLI shutdown get);
-    #sleep 2;
+    sleep 2;
     #CLEANDB=$(rm -rf /datak/jormungandr-storage);
-    #RECOVERY=$(echo recovery)
+    RECOVERY=$(echo recovery)
     #START=$(start-pool &> $LOG_DIRECTORY/$HOSTN.log &);
-    TRY=47;
+    TRY=0;
 }
 
 PAGER()
 {
-    echo Pager;
+    echo "\\n-> Pager Alert sent";
     ##Telegram
-    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: %0ADS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
+    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     ##Gotify
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH:$LAST_HASH PTH:$PoolT_max DS:$POOL_DELEGATED_STAKEQ LR:$LAST_EPOCH_POOL_REWARDS" -F "priority=$TRY");
 }
@@ -237,7 +238,7 @@ PAGER_BLOCK_REJ()
 {
         echo -e "\\n-> New block rejected";
         ##Telegram
-        #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO: %0ADS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
+        #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
         ##Gotify
         #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE POOLTHEIGHT: $PoolT_max" -F "priority=8");
 }
@@ -281,7 +282,7 @@ FLATLINERSCOUNTER=0;
 TRY=0;
 
 ## Main process ##
-#      v1.1      #
+#    v1.1.3      #
 #    12/2019     #
 ##################
 while :
@@ -299,7 +300,7 @@ do
         fi 
         if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ];
         then
-                       echo "--> Evaluating Recovery Restart ";
+                       echo "--> $DATE Evaluating Recovery Restart ";
                         until [  $TRY -gt $RECOVERY_CYCLES ]; do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
@@ -311,24 +312,23 @@ do
                                         POOLTOOL;
                                         PRINT_SCREEN;
                                         echo -e "Attempt number: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
-                                        if [ "$TRY" -eq "$RECOVERY_CYCLES" ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];then
+                                        if [ "$TRY" -eq "$RECOVERY_CYCLES" ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ] ;then
                                             echo -e "$RED--> Attempt number $RECOVERY_CYCLES reached \\n --> Recovering...$NC";
                                             RECOVERY_RESTART;
                                         sleep 180;
                                         fi
                                         
                                         #YOUR pager
-                                        if [ "$TRY" -gt "$ALERT_MINIMUM" ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ];
+                                        if [ "$TRY" -gt "$ALERT_MINIMUM" ] || [ "$FLATLINERSCOUNTER" -gt "$ALERT_MINIMUM" ];
                                         then
                                             PAGER;
                                         fi
-
                                         sleep $FORK_FREQ;
                                 else
-                                        echo -e "-->$GREEN Restart Aborted $NC";
+                                        echo -e "-->$GREEN $DATE Restart Aborted $NC";
                                         POOLTOOL;
                                         sleep 1;
-                                        TRY=71;
+                                        TRY=0;
                                 fi
                         done
         else
