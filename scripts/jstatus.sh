@@ -335,5 +335,5 @@ do
                 PRINT_SCREEN;
                 EVAL_PAGE_BLOCK;
                 sleep $FREQ;
-        fi;
+        fi
 done
