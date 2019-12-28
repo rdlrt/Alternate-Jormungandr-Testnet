@@ -296,14 +296,14 @@ do
         else 
             FLATLINERS="$lastBlockHeight";
         fi 
-        if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
+        if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
         then
                        echo "--> Evaluating Recovery Restart ";
                         until [  $TRY -gt $RECOVERY_CYCLES ]; do
                         LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                         EXPLORER_CHECK;
                         POOLTOOL;
-                                if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];
+                                if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ];
                                 then
                                         let TRY+=1;
                                         let FLATLINERSCOUNTER+=1;
@@ -311,7 +311,7 @@ do
                                         POOLTOOL;
                                         PRINT_SCREEN;
                                         echo -e "Attempt number: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
-                                        if [ "$TRY" -eq "$RECOVERY_CYCLES" ];then
+                                        if [ "$TRY" -eq "$RECOVERY_CYCLES" ] || [ "$FLATLINERSCOUNTER" -gt $FLATCYCLES ];then
                                             echo -e "$RED--> Attempt number $RECOVERY_CYCLES reached \\n --> Recovering...$NC";
                                             RECOVERY_RESTART;
                                         sleep 180;
