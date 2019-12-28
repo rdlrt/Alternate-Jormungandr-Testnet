@@ -295,6 +295,7 @@ do
             let TRY+=1;
         else 
             FLATLINERS="$lastBlockHeight";
+            FLATLINERSCOUNTER=0;
         fi 
         if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ];
         then
