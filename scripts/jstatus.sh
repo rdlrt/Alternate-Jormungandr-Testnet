@@ -44,7 +44,7 @@
 #       Each node might need proper fine tunes of the Global variable declared under the "## Configuration Parameters" section.
 #               3)   -->!!    USE THIS SCRIPT AT YOUR OWN RISK. IT IS YOUR OWN RESPONSABILITY TO MONITOR YOUR NODE!    !!<--
 #
-# Contributors: @Cardano_Staking_Pools_Alliance SPAI
+# Contributors: Staking_Pools_Alliance_International SPAI
 #
 ## Shelly Explorer:
 # https://explorer.incentivized-testnet.iohkdev.io/explorer/
@@ -59,9 +59,9 @@ THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 charact
 #export MY_USER_ID="YOUR-POOLTOOL-ID"  # on pooltool website get this from your account profile page
 
 ## BACKUP
-#JTMP="/data/jormungandr-storage";          # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
+#JTMP="/tmp/jormungandr-storage";          # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
                                             # If set it will enable automatic backup 
-#JTMPB="/data/jormungandr-storage_backup"   # Backup destination
+JTMPB="/tmp/jormungandr-storage_backup"   # Backup destination
 
 BACKUPCYCLES=30         # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
 
@@ -80,11 +80,11 @@ BACKUPCYCLES=30         # Backup window  FREQ x BACKUPCYCLES = trigger backup pr
 #TG_ChatId="xxxxxxxxx"
 #TG_URL="https://api.telegram.org/bot${TG_BotToken}/sendMessage?chat_id=${TG_ChatId}&parse_mode=Markdown"
 
-ALERT_MINIMUM=0      # minimum test loops pefore pager alert
+ALERT_MINIMUM=3      # minimum test loops pefore pager alert
 
-## Cycles Time frequency in seconds:
+## Cycles Time frequency in seconds: (PLEASE START USING THE RACCOMENDED FREQ BEFORE TUNING THEM)
 #
-FREQ=70                 # Normal Operation Refresh Frequency in seconds
+FREQ=60                 # Normal Operation Refresh Frequency in seconds
 
 FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
                         # the last block hash the script will try to do the recovery steps if any. See RECOVERY_RESTART().
@@ -92,12 +92,12 @@ FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in second
 RECOVERY_CYCLES=13      # How many times will the test cycle (Explorer Website check  + PoolTool check) with consecutive errors
                         # the script will try to do the recovery steps if any. See RECOVERY_RESTART()
 
-FLATCYCLES=9            # Every Cycle FREQ lastblockheight will be checked and if it stays the same for FLATCYCLES times, 
+FLATCYCLES=6            # Every Cycle FREQ lastblockheight will be checked and if it stays the same for FLATCYCLES times, 
                         # than the Monster will be Unleashed!  
 
 ## Block difference checks for stucked nodes
 #
-Block_diff=80  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
+Block_diff=50  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
 Block_delay=20  # Block_delay is part of the double check algorithm with the comparison of the shellyExplorer (the combination of 1 Hash not found and Lastblock heigh < 20 blocks trigger 1 of 13 consecutives alerts before triggering the recovery)
 
 
@@ -120,12 +120,12 @@ FIRSTSTART="1";
 
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
-echo -e "\\t\\t$LGRAY1   v1.1.4   2019 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1   v1.1.5   2019 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1    Loading...  $NC\\n\\n";
 
 [ -f CLI ] && [ -f jcli ] && CLI="./jcli"
 [ -z ${JORMUNGANDR_RESTAPI_URL} ] && echo -e "[ERROR] - you must set the shell variable \$JORMUNGANDR_RESTAPI_URL, \\ncheck your node config for the rest: listen_address to identify the URL, \\neg: export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:3101/api" && exit 1
-[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set, therefore no tip submissions. \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
+[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set, therefore no tip submissions than. \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
 
 ## Functions
 POOLTOOL_S()
@@ -145,11 +145,12 @@ POOLTOOL()
 {
 sleep 1;
 PoolToolStats=$(curl -s -X POST https://api.pooltool.io/dev/gettips?genesispref=8e4d2a3 > $LOG_DIRECTORY/pooltool_stats.json);
+PoolT_sec=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .distribution | grep "\"" | sort -nr -t ',' -k8 | head -n 2 |cut -d "\"" -f 2 | tail -n 1);
 PoolT_min=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .min );
 PoolT_syncd=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .syncd );
 PoolT_sample=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .samples );
-PoolT_max=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .max );
-POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> M:$PoolT_max - m:$PoolT_min - ($PoolT_syncd/$PoolT_sample) <-$NC";
+PoolT_max=$(cat $LOG_DIRECTORY/pooltool_stats.json | jq .majoritymax );
+POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> 1st:$PoolT_max - 2nd:$PoolT_sec - ($PoolT_syncd/$PoolT_sample) <-$NC";
 if [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]; 
 then
     BHEIGHT="\e[1;31m";
@@ -227,14 +228,13 @@ RECOVERY_RESTART()
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
     #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     #jshutdown=$(CLI shutdown get);
-    sleep 2;
+    #sleep 2;
     #CLEANDB=$(rm -rf $JTMP/jormungandr-storage);
-    #sleep 1;
+    sleep 1;
     #RECOVERSTORAGE=$(cp -rf $JTMP/jormungandr-storage_REC /datak/jormungandr-storage);
     #RECOVERY=$(echo "recovery in course please wait around 10 minutes");
     #GHASH=$(cat $JTMP/genesis-hash.txt); 
     #START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/Stakelovelace/secret.yaml --genesis-block-hash $GHASH &> $LOG_DIRECTORY/$HOSTN.log &);
-    TRY=0;
 }
 
 PAGER()
@@ -243,7 +243,7 @@ PAGER()
     ##Telegram
     #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Potential Fork %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     ##Gotify
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH:$LAST_HASH PTH:$PoolT_max DS:$POOL_DELEGATED_STAKEQ LR:$LAST_EPOCH_POOL_REWARDS" -F "priority=$TRY");
+    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxxx" -F "title=$HOSTN Potential Fork" -F "message=TRY:$TRY -> HASH:$LAST_HASH PTH:$PoolT_max DS:$POOL_DELEGATED_STAKEQ LR:$LAST_EPOCH_POOL_REWARDS" -F "priority=$TRY");
 }
 
 PAGER_BLOCK_MADE()
@@ -265,7 +265,7 @@ PAGER_BLOCK_REJ()
         ##Telegram
         #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
         ##Gotify
-        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxxx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE POOLTHEIGHT: $PoolT_max" -F "priority=8");
+        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Made N:$BLOCKS_MADE POOLTHEIGHT: $PoolT_max" -F "priority=8");
 }
 
 EVAL_PAGE_BLOCK()
@@ -340,60 +340,71 @@ BACKUP=0;
 PoolT_max="$Block_diff";
 
 ## Main process ##
-#    v1.1.4      #
+#    v1.1.5      #
 #    12/2019     #
 ##################
 while :
 do
-        INIT_JSTATS;
-        EXPLORER_CHECK;
-        POOLTOOL;
-        FLATLINERS_CHECK;
-        if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ];
+    INIT_JSTATS;
+    EXPLORER_CHECK;
+    POOLTOOL;
+    FLATLINERS_CHECK;
+        if ([ "$RESU" -gt 0 ] && [[ "$PoolToolHeight" != "$lastBlockHeight" || "$PoolToolHeight" == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
         then
-             echo "--> $DATE Evaluating Recovery Restart ";
-             until [  $TRY -gt $RECOVERY_CYCLES ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]; do
-             LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
-             EXPLORER_CHECK;
-             FLATLINERS_CHECK;
-             POOLTOOL;
-             PRINT_SCREEN;
-             if ([ $RESU -gt 0 ] && [[ $PoolToolHeight != $lastBlockHeight || $PoolToolHeight == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ];
-             then
-                let TRY+=1;
+             echo "-->  Evaluating Recovery Restart ";
+             until [ $TRY -gt $RECOVERY_CYCLES ]; 
+             do
+                LAST_HASH=$(CLI node stats get | grep lastBlockHash | cut -d ":" -f 2| cut -d " " -f 2);
                 INIT_JSTATS;
+                EXPLORER_CHECK;
+                FLATLINERS_CHECK;
                 POOLTOOL;
                 PRINT_SCREEN;
-                echo -e "Attempt number: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
-                # RECOVERY RESTART CONDITIONS
-                if [ "$TRY" -eq "$RECOVERY_CYCLES" ] || [ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ] ;
-                then
-                    echo -e "$RED--> Attempt number $RECOVERY_CYCLES reached \\n --> Recovering...$NC";
-                    RECOVERY_RESTART;
-                    TRY=0;
-                    sleep 180;
-                fi
-                                        
-                # YOUR Pager Fork msg
-                if [ "$TRY" -gt "$ALERT_MINIMUM" ] || [ "$FLATLINERSCOUNTER" -gt "$ALERT_MINIMUM" ];
-                then
-                    PAGER;
-                fi
-                # Recovery waiting cycle
-                sleep $FORK_FREQ;
-        else
-            echo -e "-->$GREEN $DATE Restart Aborted $NC";
-            sleep 1;
-            TRY=0;
-        fi
+                        if ([ "$RESU" -gt 0 ] && [[ "$PoolToolHeight" != "$lastBlockHeight" || "$PoolToolHeight" == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
+                        then
+                            #echo "RESU:$RESU";
+                            #echo "FLAT:$FLATLINERSCOUNTER";
+                            sleep 2;
+                            echo -e "Attempt number: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
+                                # YOUR Pager Fork msg
+                                if [ "$TRY" -gt "$ALERT_MINIMUM" ] || [ "$FLATLINERSCOUNTER" -gt "$ALERT_MINIMUM" ];
+                                then
+                                    PAGER;
+                                    echo -e "\\n \\t\\t\\t$RED-->  Warning alert sent <--$NC";
+                                fi
+                                # RECOVERY RESTART CONDITIONS
+                                if [ "$TRY" -eq "$RECOVERY_CYCLES" ] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
+                                then
+                                    echo -e "\\n \\t$RED--> Attempt number:$RECOVERY_CYCLES or FLATLINERSCOUNTER:$FLATLINERSCOUNTER reached!!! \\n --> Recovering...$NC";
+                                    RECOVERY_RESTART;
+                                    TRY="$RECOVERY_CYCLES";
+                                    let TRY+=1;
+                                    FLATLINERSCOUNTER=0
+                                    sleep 180;
+                                else
+                                    let TRY+=1;
+                                fi
+                        # Recovery waiting cycle
+                            sleep $FORK_FREQ;
+                        else
+                            echo -e "-->$GREEN $DATE Restart Aborted $NC";
+                            sleep 1;
+                            let TRY="$RECOVERY_CYCLES";
+                            let TRY+=1;
+                        fi
              done
+                #sleep 2;
         else
+            let TRY+=1;
+            #echo tuttook;
             POOLTOOL_S;
             INIT_JSTATS;
             POOLTOOL;
+            FLATLINERS_CHECK;
             PRINT_SCREEN;
             EVAL_PAGE_BLOCK;
             STORAGE_BACKUP;
             sleep $FREQ;
         fi
+        TRY=0;
 done
