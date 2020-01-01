@@ -17,7 +17,7 @@ if  [ "$1" = "--help" ] || [ $# -ne 3 ]; then
   echo "usage: $0 <ACCOUNT_SK> <ADDRESS> <AMOUNT>"
   echo "    <ACCOUNT_SK>   The Secret key of the Source address"
   echo "    <ADDRESS>     Address where to send the funds"
-  echo "    <AMOUNT>      Amount to be sent (in lovelace) - tx fees will be paid by the source address"
+  echo "    <AMOUNT>      Amount to be sent (in ADA) - tx fees will be paid by the source address"
   exit 1
 fi
 
