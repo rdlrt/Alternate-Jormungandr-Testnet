@@ -26,7 +26,7 @@ while (test "$i" -lt $timeout )
 do
   lBH1=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockHeight)
   lBH2=$(jcli rest v0 node stats get --output-format json -h $J2_URL | jq -r .lastBlockHeight)
-  currslot=$(echo $((($(date +%s)-1576264417)/86400)).$(((($(date +%s)-1576264417)%86400)/2)) | cut -d . -f 2)
+  currslot=$(echo $((($(date +%s)-1576264417)/86400)).$(((($(date +%s)-1576264417)%86400)/$slotDuration)) | cut -d . -f 2)
   diffepochend=$(expr $slotsPerEpoch - $currslot)
   if [ $diffepochend -lt 3 ]; then
     echo "Adding keys to both nodes for epoch transition:"
@@ -52,7 +52,8 @@ do
           TMPURL=$J1_URL
           J1_URL=$J2_URL
           J2_URL=$TMPURL
-          ps -ef | grep [j]ormungandr | awk '{print $2}' | xargs kill -9
+          #If you'd like to kill your jormungandr J1 session because its out of sync, uncomment below - whether you do a manual analysis or want it to be auto restarted is an env specific query
+          #ps -ef | grep [j]ormungandr | awk '{print $2}' | xargs kill -9
         fi
         i=0
       fi
