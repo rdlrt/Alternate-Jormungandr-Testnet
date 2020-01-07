@@ -53,7 +53,7 @@ do
           J1_URL=$J2_URL
           J2_URL=$TMPURL
           #If you'd like to kill your jormungandr J1 session because its out of sync, uncomment below - whether you do a manual analysis or want it to be auto restarted is an env specific query
-          #ps -ef | grep [j]ormungandr | awk '{print $2}' | xargs kill -9
+          #jcli rest v0 shutdown get -h $J2_URL
         fi
         i=0
       fi
