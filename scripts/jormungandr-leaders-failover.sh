@@ -28,12 +28,12 @@ do
   lBH2=$(jcli rest v0 node stats get --output-format json -h $J2_URL | jq -r .lastBlockHeight)
   currslot=$(echo $((($(date +%s)-1576264417)/86400)).$(((($(date +%s)-1576264417)%86400)/$slotDuration)) | cut -d . -f 2)
   diffepochend=$(expr $slotsPerEpoch - $currslot)
-  if [ $diffepochend -lt 3 ]; then
+  if [ $diffepochend -lt $slotDuration ]; then
     echo "Adding keys to both nodes for epoch transition:"
     # Risk of overrunning if bad latency to API
     # Based on this script J1 is active and will always have the leader key
     jcli rest v0 leaders post -f $jkey -h $J2_URL
-    sleep 5
+    sleep $slotDuration
     jcli rest v0 leaders delete 1 -h $J2_URL    
   fi
   sleep $slotDuration
