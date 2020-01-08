@@ -37,7 +37,8 @@ do
     jcli rest v0 leaders delete 1 -h $J2_URL    
   fi
   sleep $slotDuration
-  echo $i $lBH1 $lBH2 $lBD $diffepochend
+  # The echo command below iss only for troubleshooting while initially setting up, take it out
+  echo $i $lBH1 $lBH2 $diffepochend
   if [ -z "${lBH1}" ] || [ -z "${lBH2}" ] || [ "${lBH1}" == "null" ] || [ "${lBH2}" == "null" ] ;then
     echo "One of the node is down; failover not possible"
   else
