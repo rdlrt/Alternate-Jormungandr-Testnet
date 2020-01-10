@@ -85,7 +85,7 @@ do
         echo "Shutting down $J2_URL"
         i=0
       fi
-    elif [ "$lBH2" -gt "$lBH1" ]; then
+    elif [ "$lBH2" -lt "$lBH1" ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
         echo "J2 has been stuck; Resetting due to timeout.."
