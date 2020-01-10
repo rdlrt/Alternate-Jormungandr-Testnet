@@ -34,7 +34,7 @@ do
   echo $i $lBH1 $lBH2 $diffepochend $J1_URL
   if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Adds a small probability of losing very rare leadership task if assigned for last slot of the epoch, or first block of next epoch
     echo "Adding keys to both nodes for epoch transition:"
-    # Based on this script J1 is active and will always have the leader key
+    # Based on this script J1 is active and will always have the leader key, so add to J2
     jcli rest v0 leaders post -f $jkey -h $J2_URL
     sleep $(($slotDuration+1))
     jcli rest v0 leaders delete 1 -h $J2_URL    
@@ -54,6 +54,7 @@ do
          loopchk=0
         fi
       else
+        jcli rest v0 leaders post -f $jkey -h $J1_URL
         loopchk=0
       fi
     done
@@ -84,7 +85,7 @@ do
         echo "Shutting down $J2_URL"
         i=0
       fi
-    elif [ "$lBH2" -gt "$lBH1 ]; then
+    elif [ "$lBH2" -gt "$lBH1" ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
         echo "J2 has been stuck; Resetting due to timeout.."
