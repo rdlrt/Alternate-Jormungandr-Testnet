@@ -21,7 +21,7 @@ J2_URL=http://127.0.0.1:4101/api
 slotDuration=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotDuration)
 slotsPerEpoch=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotsPerEpoch)
 i=0
-timeout=10 # Number of slots to test before testing. On ITN, value of 10 for $timeout means 20 seconds
+timeout=30 # Number of slots to test before testing. On ITN, value of 10 for $timeout means 20 seconds
 
 while (test "$i" -le $timeout )
 do
@@ -31,7 +31,7 @@ do
   currslot=$((((($(date +%s)-1576264417)/$slotDuration)%($slotsPerEpoch*$slotDuration))/$slotDuration))
   diffepochend=$(expr $slotsPerEpoch - $currslot)
   # The echo command below iss only for troubleshooting while initially setting up, take it out
-  echo $i $lBH1 $lBH2 $diffepochend
+  echo $i $lBH1 $lBH2 $diffepochend $J1_URL
   if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Adds a small probability of losing very rare leadership task if assigned for last slot of the epoch, or first block of next epoch
     echo "Adding keys to both nodes for epoch transition:"
     # Based on this script J1 is active and will always have the leader key
@@ -70,7 +70,7 @@ do
     done
     sleep $(($slotDuration/2))
     if [ "$lBH1" -lt "$lBH2" ]; then
-      echo "J1 found to be behind J2 $((i++)) times"
+      echo "J1 found to be behind J2 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
         echo "Timeout reached; Swapping keys..."
         jcli rest v0 leaders post -f $jkey -h $J2_URL
@@ -81,6 +81,14 @@ do
         # If you'd like to kill your jormungandr J2 (previously J1) session because its out of sync (for example you may have configured auto restart *OUT OF THIS SCRIPT* - to start node back up when killed/shutdown/panic), uncomment below
         # (PS: Its not always good to stay in restart loop, how an operator would like to tackle a case where node restarts multiple times - would be up to them)
         #jcli rest v0 shutdown get -h $J2_URL
+        echo "Shutting down $J2_URL"
+        i=0
+      fi
+    elif [ "$lBH2" -gt "$lBH1 ]; then
+      echo "J2 found to be behind J1 $((i++ + 1)) times"
+      if [ "$i" -ge $timeout ]; then
+        echo "J2 has been stuck; Resetting due to timeout.."
+        jcli rest v0 shutdown get -h $J2_URL
         i=0
       fi
     else
