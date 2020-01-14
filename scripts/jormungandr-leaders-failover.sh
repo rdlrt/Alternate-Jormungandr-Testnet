@@ -11,7 +11,7 @@
 
 shopt -s expand_aliases
 
-jkey=/opt/jormungandr/priv/pool-secret.yaml
+jkey=~/jormu/priv/pool-secret.yaml
 
 # Assume two nodes operating on same node on different ports, change to method as desired to get/post settings, node stats and leader interaction with your nodes
 # It is *NOT* recommended to publish your API endpoint to non trusted client connections
@@ -19,6 +19,12 @@ J1_URL=http://127.0.0.1:4100/api
 J2_URL=http://127.0.0.1:4101/api
 
 slotDuration=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotDuration)
+if [ -z $slotDuration ]; then
+  TMPURL=$J1_URL
+  J1_URL=$J2_URL
+  J2_URL=$TMPURL
+  slotDuration=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotDuration)
+fi
 slotsPerEpoch=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotsPerEpoch)
 i=0
 timeout=30 # Number of slots to test before testing. On ITN, value of 10 for $timeout means 20 seconds
@@ -37,7 +43,7 @@ do
     # Based on this script J1 is active and will always have the leader key, so add to J2
     jcli rest v0 leaders post -f $jkey -h $J2_URL
     sleep $(($slotDuration+1))
-    jcli rest v0 leaders delete 1 -h $J2_URL    
+    jcli rest v0 leaders delete 1 -h $J2_URL
   fi
   if [ -z "${lBH1}" ] || [ -z "${lBH2}" ] || [ "${lBH1}" == "null" ] || [ "${lBH2}" == "null" ] ;then
     echo "One of the node is down; failover not possible"
@@ -72,18 +78,13 @@ do
     sleep $(($slotDuration/2))
     if [ "$lBH1" -lt "$lBH2" ]; then
       echo "J1 found to be behind J2 $((i++ + 1)) times"
-      if [ "$i" -ge $timeout ]; then
-        echo "Timeout reached; Swapping keys..."
+      if [ "$i" -ge 3 ]; then
+        echo "Swapping keys..."
         jcli rest v0 leaders post -f $jkey -h $J2_URL
         jcli rest v0 leaders delete 1 -h $J1_URL
         TMPURL=$J1_URL
         J1_URL=$J2_URL
         J2_URL=$TMPURL
-        # If you'd like to kill your jormungandr J2 (previously J1) session because its out of sync (for example you may have configured auto restart *OUT OF THIS SCRIPT* - to start node back up when killed/shutdown/panic), uncomment below
-        # (PS: Its not always good to stay in restart loop, how an operator would like to tackle a case where node restarts multiple times - would be up to them)
-        #jcli rest v0 shutdown get -h $J2_URL
-        echo "Shutting down $J2_URL"
-        i=0
       fi
     elif [ "$lBH2" -lt "$lBH1" ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
