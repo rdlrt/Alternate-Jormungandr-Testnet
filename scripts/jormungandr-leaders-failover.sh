@@ -93,9 +93,9 @@ do
     elif [ "$lBH2" -lt "$lBH1" ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
-        echo "J2 has been stuck; Resetting due to timeout.."
         # Consider the action to be taken when you see the node is behind the schedule after the timeout. Restarting the node is not always the best solution for the network, and if used - should only be a temporary remidiation
         jcli rest v0 shutdown get -h $J2_URL
+        echo "J2 has been stuck; Resetting due to timeout.." >> /tmp/killjormu.log >&2
         i=0
       fi
     else
