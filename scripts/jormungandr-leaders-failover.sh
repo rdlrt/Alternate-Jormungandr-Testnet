@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# WARNING:
+# - If you're not sure what the script does, please do not use it directly on the network. Incorrectly implementation may cause you to create an adversarial fork and (correctly) report you accordingly on some community sites
+
 # DISCLAIMER:
 # - This script is not supposed to work out of the box , due to variance of how operators will create their environment and design their failover setup. It is expected that you customise this to your environment and usage.
 # - While the actual script is pretty basic in nature, It is assumed that someone using this method is well equipped and qualifies as per the skills and requirements expected of a stakepool operator in the URL below:
@@ -85,11 +88,13 @@ do
         TMPURL=$J1_URL
         J1_URL=$J2_URL
         J2_URL=$TMPURL
+        i=0
       fi
     elif [ "$lBH2" -lt "$lBH1" ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
         echo "J2 has been stuck; Resetting due to timeout.."
+        # Consider the action to be taken when you see the node is behind the schedule after the timeout. Restarting the node is not always the best solution for the network, and if used - should only be a temporary remidiation
         jcli rest v0 shutdown get -h $J2_URL
         i=0
       fi
