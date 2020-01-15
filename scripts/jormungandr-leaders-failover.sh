@@ -30,7 +30,7 @@ if [ -z $slotDuration ]; then
 fi
 slotsPerEpoch=$(jcli rest v0 settings get --output-format json -h $J1_URL | jq -r .slotsPerEpoch)
 i=0
-timeout=30 # Number of slots to test before testing. On ITN, value of 10 for $timeout means 20 seconds
+timeout=30 # Number of slots to test before taking action on node that's behind. On ITN, value of 30 for $timeout means 60 seconds
 
 while (test "$i" -le $timeout )
 do
