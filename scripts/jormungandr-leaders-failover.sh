@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # WARNING:
-# - If you're not sure what the script does, please do not use it directly on the network. Incorrectly implementation may cause you to create an adversarial fork and (correctly) report you accordingly on some community sites
+# - If you're not sure what the script does, please do not use it directly on the network. Incorrect implementation may cause you to create an adversarial fork and (correctly) report you accordingly on some community sites
 
 # DISCLAIMER:
 # - This script is not supposed to work out of the box , due to variance of how operators will create their environment and design their failover setup. It is expected that you customise this to your environment and usage.
