@@ -39,8 +39,9 @@ do
   #currslot=$(echo $((($(date +%s)-1576264417)/$slotsPerEpoch/$slotDuration)).$(((($(date +%s)-1576264417)%($slotsPerEpoch*$slotDuration))/$slotDuration)) | cut -d . -f 2)
   currslot=$((((($(date +%s)-1576264417)/$slotDuration)%($slotsPerEpoch*$slotDuration))/$slotDuration))
   diffepochend=$(expr $slotsPerEpoch - $currslot)
+  hdiff=$(( $lBH2 - $lBH1 ))
   # The echo command below iss only for troubleshooting while initially setting up, take it out
-  echo $i $lBH1 $lBH2 $diffepochend $J1_URL
+  echo $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL
   if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Adds a small probability of losing very rare leadership task if assigned for last slot of the epoch, or first block of next epoch
     echo "Adding keys to both nodes for epoch transition:"
     # Based on this script J1 is active and will always have the leader key, so add to J2
@@ -79,9 +80,9 @@ do
       fi
     done
     sleep $(($slotDuration/2))
-    if [ "$lBH1" -lt "$lBH2" ]; then
+    if [ "$hdiff" -gt 1 ]; then
       echo "J1 found to be behind J2 $((i++ + 1)) times"
-      if [ "$i" -ge 3 ]; then
+      if [ "$i" -ge 1 ]; then
         echo "Swapping keys..."
         jcli rest v0 leaders post -f $jkey -h $J2_URL
         jcli rest v0 leaders delete 1 -h $J1_URL
@@ -90,7 +91,7 @@ do
         J2_URL=$TMPURL
         i=0
       fi
-    elif [ "$lBH2" -lt "$lBH1" ]; then
+    elif [ "$hdiff" -lt -1 ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
         # Consider the action to be taken when you see the node is behind the schedule after the timeout. Restarting the node is not always the best solution for the network, and if used - should only be a temporary remidiation
