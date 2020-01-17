@@ -9,7 +9,7 @@
 #
 #
 # How the fork/stuck check works:
-# The script will retrieve  the last block hash elaborated by the node (jcli) and query the ITN IOHK eplorer to very the block hash  
+# The script will retrieve  the last block hash elaborated by the node (jcli) and query the ITN IOHK eplorer to verify the block hash  
 # In addition the node BlockHihgt is updated on PoolTool.io and simultaneosly using the return value and second reference before 
 # starting evaluating the Recovery Restart function.
 #
@@ -52,24 +52,23 @@
 ## Configuration Parameters 
 #
 ## Rewards directory dump
-export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/datak/pool/Stakelovelace/Rewards
+#export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/data/pool/Rewards
 
 ## ITN Genesis
 GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
 
 ## PoolTool Configuration
-THIS_GENESIS="8e4d2a343f3dcf93"   # We only actually look at the first 7 characters of the ITN genesis
+THIS_GENESIS="8e4d2a343f3dcf93"         # We only actually look at the first 7 characters of the ITN genesis
 
-#export MY_POOL_ID="YOUR-POOL-ID"   # Your Pool public IP
-#export MY_USER_ID="YOUR-POOLTOOL-ID"  # on pooltool website get this from your account profile page
-MY_USER_ID="f4700f4f-57c9-4394-afb4-60535fa7add6"  # on pooltool website get this from your account profile page
+#export MY_POOL_ID="YOUR-POOL-ID"       # Your Pool public ID - IMPORTANT FOR POOL STATS!
+#export MY_USER_ID="YOUR-POOLTOOL-ID"   # on pooltool website get this from your account profile page
 
 ## BACKUP
-#JTMP="/datak/jormungandr-storage";          # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
+#JTMP="/datak/jormungandr-storage";         # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
                                             # If set it will enable automatic backup 
 JTMPB="/datak/jormungandr-storage_backup"   # Backup destination
 
-BACKUPCYCLES=10         # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
+BACKUPCYCLES=10                         # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
 
 ## Telegram Message API 
 #
@@ -116,7 +115,7 @@ LEADERS="$LOG_DIRECTORY/leaders_logs.log";   # PATH of the temporary leaders log
 ## Clolors palette
 #
 BOLD="\e[1;37m"; GREEN="\e[1;32m"; RED="\e[1;31m"; ORANGE="\e[33;5m"; NC="\e[0m"; CYAN="\e[0;36m"; LGRAY1="\e[1;37m"; LGRAY="\e[2;37m"; BHEIGHT="\e[1;32m";
-REW="\e[1;93m"; POOLT="\e[1;44m";
+REW="\e[1;93m"; POOLT="\e[1;44m"; LGREEN="\e[0;32m";
 
 ## Main Init
 #
@@ -126,7 +125,7 @@ FIRSTSTART="1";
 
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
-echo -e "\\t\\t$LGRAY1   v1.1.6   2020 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1   v1.1.7   2020 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1    Loading...  $NC\\n\\n";
 
 [ -f CLI ] && [ -f jcli ] && CLI="./jcli"
@@ -158,7 +157,7 @@ PoolT_min=$(jq .min $LOG_DIRECTORY/pooltool_stats.json);
 PoolT_syncd=$(jq .syncd $LOG_DIRECTORY/pooltool_stats.json );
 PoolT_sample=$(jq .samples $LOG_DIRECTORY/pooltool_stats.json);
 PoolT_max=$(jq .majoritymax $LOG_DIRECTORY/pooltool_stats.json);
-PoolT_sec=$(jq .distribution $LOG_DIRECTORY/pooltool_stats.json | grep "\"" | sort -nr -t ',' -k8 | grep -v $PoolT_max |head -n 1 |cut -d "\"" -f 2);
+PoolT_sec=$(jq .distribution $LOG_DIRECTORY/pooltool_stats.json | sort -nr -t: -k 2 | grep -v $PoolT_max |head -n 1 |cut -d "\"" -f 2);
 
 POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> 1st:$PoolT_max - 2nd:$PoolT_sec - ($PoolT_syncd/$PoolT_sample) <-$NC";
 if [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]; 
@@ -208,34 +207,45 @@ INIT_JSTATS()
 
 PRINT_SCREEN()
 {
-                LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
-                SLOTS=$(grep -B2 Pending $LEADERS | grep -A1 "scheduled_at_date:" | grep -A1 "$lastBlockDateSlot\." | grep scheduled_at_time | wc -l);
-                NEXT_SLOTS=$(grep -A 1 scheduled_at_time  $LEADERS | grep $DAY'T'$ORA | wc -l);
-                NEXT_SLOTS_LIST=$(grep scheduled_at_time  $LEADERS | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
-                BLOCKS_MADE1=$(grep -A1 -B3 Block $LEADERS | grep -A5 "scheduled_at_date:" | grep -A4 "$lastBlockDateSlot\." | grep block | cut -d ":" -f 2 >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 );
-                BLOCKS_MADE2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 | sort -nr | uniq  > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs);
-                LAST_BLOCKH=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | tail -n 1 | awk '{ print $1 }');
-                BLOCKS_MADE=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | wc -l );
-                BLOCKS_ON_CHAIN=$(echo "/ociao");
-                watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{ print $5 }' | cut -d ':' -f 1 | sort | uniq | wc -l);
-                BLOCKS_REJECTED1=$(grep -B3 Rejected $LEADERS | grep -A1 "$lastBlockDateSlot\."| grep scheduled_at_time >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs);
-                BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort -nr | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs);
-                BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
-                REASON_REJECTED=$(grep -A1 Rejected $LEADERS);
-                clear;
-                echo -e "-> $DATE \\t $STATUS";
-                echo -e "-> HOST:$BOLD$HOSTN$NC   Epoch:$BOLD$lastBlockDateSlotFull$NC   Uptime:$BOLD$uptime$NC  ";
-                echo -e " ";
-                echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$PTSUBMISSION$NC";
-                echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
-                echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC"       ;
-                echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC";
-                echo -e "$POOLINFO";
-                echo -e " ";
-                echo -e "-> Last Hash:\\n$LAST_HASH";
-                echo -e "-> Made:$GREEN$BLOCKS_MADE $NC- Rejected:$RED$BLOCKS_REJECTED$NC - Slots:$ORANGE$SLOTS$NC - Planned(b/h):$BOLD$NEXT_SLOTS$NC";
-                echo -e "$BOLD$NEXT_SLOTS_LIST$NC";
-                echo -e ":\\n$ORANGE$REASON_REJECTED$NC\\n";
+LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
+QRESU=1;
+until [ $QRESU -lt 1 ]; 
+do
+curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data-binary "{\"query\":\"\n    query {\n      stakePool (id:\\\"$MY_POOL_ID\\\") {\n        blocks (last: 1000) {\n          totalCount\n          edges {\n            cursor\n            node {\n              \n  id\n  date {\n    slot\n    epoch {\n      \n  id\n  firstBlock {\n    id\n  }\n  lastBlock {\n    id\n  }\n  totalBlocks\n\n    }\n  }\n            }\n          }\n        }\n      }\n    }\n  \"}" | jq -r . > $LOG_DIRECTORY/onchainblocks.json                        
+QRESU=$?;
+done
+#Total
+TONCHAIN=$(grep -A1 node $LOG_DIRECTORY/onchainblocks.json | grep id  | wc -l);
+#Current epoch
+CONCHAIN=$(grep -A1 epoch $LOG_DIRECTORY/onchainblocks.json| grep $lastBlockDateSlot  | wc -l);
+
+SLOTS=$(grep -B2 Pending $LEADERS | grep -A1 "scheduled_at_date:" | grep -A1 "$lastBlockDateSlot\." | grep scheduled_at_time | wc -l);
+NEXT_SLOTS=$(grep -A 1 scheduled_at_time  $LEADERS | grep $DAY'T'$ORA | wc -l);
+NEXT_SLOTS_LIST=$(grep scheduled_at_time  $LEADERS | grep $DAY'T'$ORA | awk '{print $2}'| cut -d "T" -f 2|cut -d "+" -f 1| sort);
+BLOCKS_MADE1=$(grep -A1 -B3 Block $LEADERS | grep -A5 "scheduled_at_date:" | grep -A4 "$lastBlockDateSlot\." | grep block | cut -d ":" -f 2 >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 );
+BLOCKS_MADE2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1 | sort -nr | uniq  > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs);
+LAST_BLOCKH=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | tail -n 1 | awk '{ print $1 }');
+BLOCKS_MADE=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs | wc -l );
+BLOCKS_ON_CHAIN=$(echo "/ociao");
+watch_node=$(netstat -anl  | grep tcp | grep EST |  awk '{ print $5 }' | cut -d ':' -f 1 | sort | uniq | wc -l);
+BLOCKS_REJECTED1=$(grep -B3 Rejected $LEADERS | grep -A1 "$lastBlockDateSlot\."| grep scheduled_at_time >> $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs);
+BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort -nr | uniq > $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs);
+BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
+REASON_REJECTED=$(grep -A1 Rejected $LEADERS);
+clear;
+echo -e "-> $DATE \\t $STATUS";
+echo -e "-> HOST:$BOLD$HOSTN$NC Blocks:$BOLD$TONCHAIN$NC  Epoch:$BOLD$lastBlockDateSlotFull$NC   Uptime:$BOLD$uptime$NC  ";
+echo -e " ";
+echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$PTSUBMISSION$NC";
+echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
+echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC"       ;
+echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC";
+echo -e "$POOLINFO";
+echo -e " ";
+echo -e "-> Last Hash:\\n$LAST_HASH";
+echo -e "-> Made:$GREEN$CONCHAIN$NC/$LGREEN$BLOCKS_MADE $NC- Rejected:$RED$BLOCKS_REJECTED$NC - Slots:$ORANGE$SLOTS$NC - Planned(b/h):$BOLD$NEXT_SLOTS$NC";
+echo -e "$BOLD$NEXT_SLOTS_LIST$NC";
+echo -e ":\\n$ORANGE$REASON_REJECTED$NC\\n";
 }
 
 
@@ -245,15 +255,15 @@ RECOVERY_RESTART()
     #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
     #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
     #jshutdown=$(CLI shutdown get);
-    #sleep 2;
+    sleep 2;
     #jshutdown2=$(ps max | grep jorm | grep config | awk '{print $1}');
     #jshutdown3=$(kill -9 $jshutdown2 );
     #CLEANDB=$(rm -rf $JTMP);
-    sleep 1;
+    #sleep 1;
     #RECOVERSTORAGE=$(cp -rf $JTMPB $JTMP);
     #RECOVERY=$(echo -e "\\t\\t $RED--> Recovery in course please wait around 10 minutes$NC");
     #GHASH=$(cat /datak/genesis-hash.txt); 
-    #START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/YOUPOOL/secret.yaml --genesis-block-hash $GHASH &> $LOG_DIRECTORY/$HOSTN.log &);
+    #START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/Stakelovelace/secret.yaml --genesis-block-hash $GHASH &> $LOG_DIRECTORY/$HOSTN.log &);
 }
 
 PAGER()
@@ -284,7 +294,7 @@ PAGER_BLOCK_REJ()
         ##Telegram
         #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Block just Rejected N:$BLOCKS_REJECTED R:$REASON_REJECTED %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
         ##Gotify
-        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=xxxx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Rejected Reason:$REASON_REJECTED POOLTHEIGHT: $PoolT_max" -F "priority=8");
+        #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=HOSTN Block just Rejected" -F "message=$HOSTN Block just Rejected Reason:$REASON_REJECTED POOLTHEIGHT: $PoolT_max" -F "priority=8");
 }
 
 EVAL_PAGE_BLOCK()
@@ -381,6 +391,8 @@ do
                 PRINT_SCREEN;
                         if ([ "$RESU" -gt 0 ] && [[ "$PoolToolHeight" != "$lastBlockHeight" || "$PoolToolHeight" == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
                         then
+                            #echo "RESU:$RESU";
+                            #echo "FLAT:$FLATLINERSCOUNTER";
                             sleep 2;
                             echo -e "Try: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
 
