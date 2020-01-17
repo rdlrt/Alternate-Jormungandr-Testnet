@@ -80,9 +80,9 @@ do
       fi
     done
     sleep $(($slotDuration/2))
-    if [ "$hdiff" -gt 1 ]; then
+    if [ "$hdiff" -gt 0 ]; then
       echo "J1 found to be behind J2 $((i++ + 1)) times"
-      if [ "$i" -ge 1 ]; then
+      if [ "$i" -ge 3 ]; then # if J2 is ahead for consecutive 2.5 slots, swap leadership for 3rd slot
         echo "Swapping keys..."
         jcli rest v0 leaders post -f $jkey -h $J2_URL
         jcli rest v0 leaders delete 1 -h $J1_URL
@@ -91,11 +91,11 @@ do
         J2_URL=$TMPURL
         i=0
       fi
-    elif [ "$hdiff" -lt -1 ]; then
+    elif [ "$hdiff" -lt -5 ]; then
       echo "J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
-        # Consider the action to be taken when you see the node is behind the schedule after the timeout. Restarting the node is not always the best solution for the network, and if used - should only be a temporary remidiation
-        jcli rest v0 shutdown get -h $J2_URL
+        # Consider the action to be taken when you see the node is behind the schedule after the timeout. Restarting the node is not always the best solution for the network, and if used - should only be a temporary remidiation. Starting from 0.8.6, the node is able to catch up fine. Thus, taking this action out as default
+        #jcli rest v0 shutdown get -h $J2_URL
         echo "J2 has been stuck; Resetting due to timeout.." >> /tmp/killjormu.log >&2
         i=0
       fi
