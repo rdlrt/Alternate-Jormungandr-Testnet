@@ -208,12 +208,8 @@ INIT_JSTATS()
 PRINT_SCREEN()
 {
 LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
-QRESU=1;
-until [ $QRESU -lt 1 ]; 
-do
-curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data-binary "{\"query\":\"\n    query {\n      stakePool (id:\\\"$MY_POOL_ID\\\") {\n        blocks (last: 1000) {\n          totalCount\n          edges {\n            cursor\n            node {\n              \n  id\n  date {\n    slot\n    epoch {\n      \n  id\n  firstBlock {\n    id\n  }\n  lastBlock {\n    id\n  }\n  totalBlocks\n\n    }\n  }\n            }\n          }\n        }\n      }\n    }\n  \"}" | jq -r . > $LOG_DIRECTORY/onchainblocks.json                        
+curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data-binary "{\"query\":\"\n    query {\n      stakePool (id:\\\"$MY_POOL_ID\\\") {\n        blocks (last: 10000) {\n          totalCount\n          edges {\n            cursor\n            node {\n              \n  id\n  date {\n    slot\n    epoch {\n      \n  id\n  firstBlock {\n    id\n  }\n  lastBlock {\n    id\n  }\n  totalBlocks\n\n    }\n  }\n            }\n          }\n        }\n      }\n    }\n  \"}" | jq -r . > $LOG_DIRECTORY/onchainblocks.json                        
 QRESU=$?;
-done
 #Total
 TONCHAIN=$(grep -A1 node $LOG_DIRECTORY/onchainblocks.json | grep id  | wc -l);
 #Current epoch
