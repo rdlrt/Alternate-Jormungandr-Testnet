@@ -39,19 +39,19 @@ do
   #currslot=$(echo $((($(date +%s)-1576264417)/$slotsPerEpoch/$slotDuration)).$(((($(date +%s)-1576264417)%($slotsPerEpoch*$slotDuration))/$slotDuration)) | cut -d . -f 2)
   currslot=$(( (($(date +%s)-1576264417)%($slotsPerEpoch*$slotDuration))/$slotDuration ))
   diffepochend=$(expr $slotsPerEpoch - $currslot)
-  hdiff=$(( $lBH2 - $lBH1 ))
-  # The echo command below iss only for troubleshooting while initially setting up, take it out
-  echo $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL
-  if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Adds a small probability of losing very rare leadership task if assigned for last slot of the epoch, or first block of next epoch
-    echo "Adding keys to both nodes for epoch transition:"
-    # Based on this script J1 is active and will always have the leader key, so add to J2
-    jcli rest v0 leaders post -f $jkey -h $J2_URL
-    sleep $(($slotDuration+1))
-    jcli rest v0 leaders delete 1 -h $J2_URL
-  fi
   if [ -z "${lBH1}" ] || [ -z "${lBH2}" ] || [ "${lBH1}" == "null" ] || [ "${lBH2}" == "null" ] ;then
-    echo "One of the node is down; failover not possible"
+    echo "Node Down, Failover not possible: $i $lBH1 $lBH2 - $diffepochend $J1_URL $J2_URL"
   else
+    hdiff=$(( $lBH2 - $lBH1 ))
+    # The echo command below is only for troubleshooting while initially setting up, take it out
+    echo $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL
+    if [ $diffepochend -lt $(($slotDuration+5)) ]; then # Adds a small probability of creating an adversarial fork if assigned for last 3 slots of the epoch, or first 3 slots of next epoch
+      echo "Adding keys to both nodes for epoch transition:"
+      # Based on this script J1 is active and will always have the leader key, so add to J2
+      jcli rest v0 leaders post -f $jkey -h $J2_URL
+      sleep $(($slotDuration+10))
+      jcli rest v0 leaders delete 1 -h $J2_URL
+    fi
     # Change if appropriate to your case: The extract below assumes your leaders will only have 1 key, and that leader ID 1(referred later for delete) points to the pool used for failover
     # Ensure J1 only has 1 leader ID, delete others
     loopchk=1
