@@ -9,7 +9,7 @@
 #
 #
 # How the fork/stuck check works:
-# The script will retrieve  the last block hash elaborated by the node (jcli) and query the ITN IOHK eplorer to verify the block hash  
+# The script will retrieve  the last block hash elaborated by the node (jcli) and query the ITN IOHK eplorer to very the block hash  
 # In addition the node BlockHihgt is updated on PoolTool.io and simultaneosly using the return value and second reference before 
 # starting evaluating the Recovery Restart function.
 #
@@ -52,23 +52,23 @@
 ## Configuration Parameters 
 #
 ## Rewards directory dump
-#export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/data/pool/Rewards
+export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/datak/pool/Stakelovelace/Rewards
 
 ## ITN Genesis
 GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
 
 ## PoolTool Configuration
-THIS_GENESIS="8e4d2a343f3dcf93"         # We only actually look at the first 7 characters of the ITN genesis
+THIS_GENESIS="8e4d2a343f3dcf93"                     # We only actually look at the first 7 characters of the ITN genesis
 
-#export MY_POOL_ID="YOUR-POOL-ID"       # Your Pool public ID - IMPORTANT FOR POOL STATS!
-#export MY_USER_ID="YOUR-POOLTOOL-ID"   # on pooltool website get this from your account profile page
+#export MY_POOL_ID="YOUR-POOL-ID"                   # Your Pool public ID - IMPORTANT FOR POOL STATS!
+#export MY_USER_ID="YOUR-POOLTOOL-ID"               # on pooltool website get this from your account profile page
 
 ## BACKUP
-#JTMP="/datak/jormungandr-storage";         # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
-                                            # If set it will enable automatic backup 
-JTMPB="/datak/jormungandr-storage_backup"   # Backup destination
+#JTMP="/datak/jormungandr-storage";                  # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
+                                                    # If set it will enable automatic backup 
+JTMPB="/datak/jormungandr-storage_backup"           # Backup destination
 
-BACKUPCYCLES=10                         # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
+BACKUPCYCLES=5                                     # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
 
 ## Telegram Message API 
 #
@@ -85,11 +85,11 @@ BACKUPCYCLES=10                         # Backup window  FREQ x BACKUPCYCLES = t
 #TG_ChatId="xxxxxxxxx"
 #TG_URL="https://api.telegram.org/bot${TG_BotToken}/sendMessage?chat_id=${TG_ChatId}&parse_mode=Markdown"
 
-ALERT_MINIMUM=2      # minimum test loops pefore pager alert
+ALERT_MINIMUM=0      # minimum test loops pefore pager alert
 
 ## Cycles Time frequency in seconds:
 #
-FREQ=60                 # Normal Operation Refresh Frequency in seconds
+FREQ=50                 # Normal Operation Refresh Frequency in seconds
 
 FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
                         # the last block hash the script will try to do the recovery steps if any. See RECOVERY_RESTART().
@@ -102,7 +102,7 @@ FLATCYCLES=2            # Every Cycle FREQ lastblockheight will be checked and i
 
 ## Block difference checks for stucked nodes
 #
-Block_diff=10  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
+Block_diff=20  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
 Block_delay=10  # Block_delay is part of the double check algorithm with the comparison of the shellyExplorer (the combination of 1 Hash not found and Lastblock heigh < 20 blocks trigger 1 of 13 consecutives alerts before triggering the recovery)
 
 
@@ -121,31 +121,32 @@ REW="\e[1;93m"; POOLT="\e[1;44m"; LGREEN="\e[0;32m";
 #
 shopt -s expand_aliases
 alias CLI="$(which jcli) rest v0"
+alias PCLI="$(which jcli)"
 FIRSTSTART="1";
 
 clear;
 echo -e "\\t\\t$BOLD- jstatus WatchDog -$NC";
-echo -e "\\t\\t$LGRAY1   v1.1.7   2020 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1   v1.1.8   2020 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1    Loading...  $NC\\n\\n";
 
 [ -f CLI ] && [ -f jcli ] && CLI="./jcli"
 [ -z ${JORMUNGANDR_RESTAPI_URL} ] && echo -e "[ERROR] - you must set the shell variable \$JORMUNGANDR_RESTAPI_URL, \\ncheck your node config for the rest: listen_address to identify the URL, \\neg: export JORMUNGANDR_RESTAPI_URL=http://127.0.0.1:3101/api" && exit 1
-[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set, therefore no tip submissions than. \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
+[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolTSUB="00000";
+
+VERSION=$(PCLI -V | awk '{ print $2 }');
 
 ## Functions
 POOLTOOL_S()
 {
-[ -z ${MY_USER_ID} ] && echo -e "[WARN] - PoolTool parameters not set \\neg: export MY_POOL_ID=xxxxxxxxxxx \neg: export MY_USER_ID=xxxx-xxxxx-xx" && PoolToolHeight="00000";
-
-if [[ $PoolToolHeight == "00000" ]];
+if [[ $PoolTSUB == "00000" ]];
 then
     BHEIGHT="\e[1;31m";
     PTSUBMISSION=" ";
 elif [ "$lastBlockHeight" != "" ]; 
     then
-    PoolToolURL="https://api.pooltool.io/v0/sharemytip?poolid=$MY_POOL_ID&userid=$MY_USER_ID&genesispref=$THIS_GENESIS&mytip=$lastBlockHeight&lasthash=$lastBlockHash&lastpool=$lastPoolID";
-    PoolToolHeight=$(curl -s -G $PoolToolURL | grep pooltool | cut -d "\"" -f 6);
-    PTSUBMISSION=" Sub:$PoolToolHeight";
+    PoolToolURL="https://api.pooltool.io/v0/sharemytip?poolid=$MY_POOL_ID&userid=$MY_USER_ID&genesispref=$THIS_GENESIS&mytip=$lastBlockHeight&lasthash=$lastBlockHash&lastpool=$lastPoolID&platform=jstatus";
+    PoolToolHeight=$(curl -s -G $PoolToolURL | jq -r .pooltoolmax );
+    PTSUBMISSION=$(echo "-> $PoolToolHeight <-");
 fi
 }
 
@@ -159,7 +160,7 @@ PoolT_sample=$(jq .samples $LOG_DIRECTORY/pooltool_stats.json);
 PoolT_max=$(jq .majoritymax $LOG_DIRECTORY/pooltool_stats.json);
 PoolT_sec=$(jq .distribution $LOG_DIRECTORY/pooltool_stats.json | sort -nr -t: -k 2 | grep -v $PoolT_max |head -n 1 |cut -d "\"" -f 2);
 
-POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> 1st:$PoolT_max - 2nd:$PoolT_sec - ($PoolT_syncd/$PoolT_sample) <-$NC";
+POOLTOOLSTAS="PoolTHeight:\\t$POOLT-> $PoolT_max >> $PoolT_sec - ($PoolT_syncd/$PoolT_sample)$NC";
 if [ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]; 
 then
     BHEIGHT="\e[1;31m";
@@ -171,45 +172,47 @@ sleep 1;
 
 INIT_JSTATS()
 {
-        DATE=$(date);
-        ORA=$(date +"%H");
-        HOSTN=$(hostname);
-        DAY=$(date +"%d");
-        TMPF="$LOG_DIRECTORY/stats.json";
-        QUERY=$(CLI  node stats get --output-format json > $TMPF);
-        lastBlockDateSlot=$(jq -r .lastBlockDate $TMPF | cut -d "." -f 1);
-        lastBlockDateSlotFull=$(jq -r .lastBlockDate $TMPF )
-        blockRecvCnt=$(jq -r .blockRecvCnt $TMPF);
-        lastBlockHeight=$(jq -r .lastBlockHeight $TMPF);
-        uptime=$(jq -r .uptime $TMPF);
-        lastBlockTx=$(jq -r .lastBlockTx $TMPF);
-        txRecvCnt=$(jq -r .txRecvCnt $TMPF);
-        nodesEstablished=$(CLI network stats get --output-format json | jq '. | length');
-        Quarantined=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
-        Quarantined_non_public=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
-        LAST_HASH=$(jq -r .lastBlockHash $TMPF);
-        lastBlockHash=$LAST_HASH;
-        lastPoolID=$(CLI block ${LAST_HASH} get | cut -c169-232)
+DATE=$(date);
+ORA=$(date +"%H");
+HOSTN=$(hostname);
+DAY=$(date +"%d");
+TMPF="$LOG_DIRECTORY/stats.json";
+QUERY=$(CLI  node stats get --output-format json > $TMPF);
+lastBlockDateSlot=$(jq -r .lastBlockDate $TMPF | cut -d "." -f 1);
+lastBlockDateSlotFull=$(jq -r .lastBlockDate $TMPF )
+blockRecvCnt=$(jq -r .blockRecvCnt $TMPF);
+lastBlockHeight=$(jq -r .lastBlockHeight $TMPF);
+uptime=$(jq -r .uptime $TMPF);
+lastBlockTx=$(jq -r .lastBlockTx $TMPF);
+txRecvCnt=$(jq -r .txRecvCnt $TMPF);
+nodesEstablished=$(CLI network stats get --output-format json | jq '. | length');
+Quarantined=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/quarantined 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
+Quarantined_non_public=$(curl -s $JORMUNGANDR_RESTAPI_URL/v0/network/p2p/non_public 2>/dev/null  | jq '.' | grep addr | sort | uniq | wc -l)
+LAST_HASH=$(jq -r .lastBlockHash $TMPF);
+lastBlockHash=$LAST_HASH;
+lastPoolID=$(CLI block ${LAST_HASH} get | cut -c169-232)
 
-        if [ $MY_POOL_ID ]; 
-            then
-            LAST_EPOCH_POOL=$(CLI stake-pool get $MY_POOL_ID > $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 );    
-            LAST_EPOCH_POOL_REWARDS=$( grep value_taxed $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000}' | cut -d "." -f 1 );
-            LAST_EPOCH_POOL_DEL_REWARDS=$( grep value_for_stakers $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000}' | cut -d "." -f 1 );
-            POOL_DELEGATED_STAKEQ=$( grep total_stake $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000000}' | cut -d "." -f 1 );
-            POOL_DELEGATED_STAKE="Stake(K):\\t$REW$POOL_DELEGATED_STAKEQ$NC"
-            LASTREWARDS="LastRewards:\\t$REW$LAST_EPOCH_POOL_REWARDS$NC";
-            POOLINFO="-> $POOL_DELEGATED_STAKE\\t- $LASTREWARDS"
-            else
-            POOLINFO="";
-        fi
+if [ $MY_POOL_ID ]; 
+    then
+    LAST_EPOCH_POOL=$(CLI stake-pool get $MY_POOL_ID > $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 );    
+    LAST_EPOCH_POOL_REWARDS=$( grep value_taxed $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000}' | cut -d "." -f 1 );
+    LAST_EPOCH_POOL_DEL_REWARDS=$( grep value_for_stakers $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000}' | cut -d "." -f 1 );
+    POOL_DELEGATED_STAKEQ=$( grep total_stake $LOG_DIRECTORY/$lastBlockDateSlot.poolstats_01 | awk '{print $2}' | awk '{print $1/1000000000}' | cut -d "." -f 1 );
+    POOL_DELEGATED_STAKE="Stake(K):\\t$REW$POOL_DELEGATED_STAKEQ$NC"
+    LASTREWARDS="LastRewards:\\t$REW$LAST_EPOCH_POOL_REWARDS$NC";
+    POOLINFO="-> $POOL_DELEGATED_STAKE\\t- $LASTREWARDS"
+    else
+    POOLINFO="";
+fi
 }
 
 PRINT_SCREEN()
 {
 LEADERS_QUERY=$(CLI leaders logs get > $LEADERS);
+
 curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data-binary "{\"query\":\"\n    query {\n      stakePool (id:\\\"$MY_POOL_ID\\\") {\n        blocks (last: 10000) {\n          totalCount\n          edges {\n            cursor\n            node {\n              \n  id\n  date {\n    slot\n    epoch {\n      \n  id\n  firstBlock {\n    id\n  }\n  lastBlock {\n    id\n  }\n  totalBlocks\n\n    }\n  }\n            }\n          }\n        }\n      }\n    }\n  \"}" | jq -r . > $LOG_DIRECTORY/onchainblocks.json                        
 QRESU=$?;
+
 #Total
 TONCHAIN=$(grep -A1 node $LOG_DIRECTORY/onchainblocks.json | grep id  | wc -l);
 #Current epoch
@@ -229,10 +232,10 @@ BLOCKS_REJECTED2=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs| sort 
 BLOCKS_REJECTED=$(cat $LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs | wc -l );
 REASON_REJECTED=$(grep -A1 Rejected $LEADERS);
 clear;
-echo -e "-> $DATE \\t $STATUS";
-echo -e "-> HOST:$BOLD$HOSTN$NC Blocks:$BOLD$TONCHAIN$NC  Epoch:$BOLD$lastBlockDateSlotFull$NC   Uptime:$BOLD$uptime$NC  ";
+echo -e "-> $DATE  $BOLD JVer:$VERSION $NC\\t$STATUS";
+echo -e "-> HOST:$BOLD$HOSTN$NC  Blocks:$BOLD$TONCHAIN$NC  Epoch:$BOLD$lastBlockDateSlotFull$NC  Uptime:$BOLD$uptime$NC  ";
 echo -e " ";
-echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight <-$PTSUBMISSION$NC";
+echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight $PTSUBMISSION$NC";
 echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
 echo -e "-> txRecvCnt:\\t$LGRAY$txRecvCnt$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC"       ;
 echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC";
@@ -247,15 +250,11 @@ echo -e ":\\n$ORANGE$REASON_REJECTED$NC\\n";
 
 RECOVERY_RESTART()
 {
-    echo -e "\\t\\t\\t\\t $RED--> We're ... Restarting! <--$NC";
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
-    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
+    echo -e "\\t\\t\\t $RED--> We're ... Restarting! <--$NC";
     #jshutdown=$(CLI shutdown get);
     sleep 2;
-    #jshutdown2=$(ps max | grep jorm | grep config | awk '{print $1}');
-    #jshutdown3=$(kill -9 $jshutdown2 );
     #CLEANDB=$(rm -rf $JTMP);
-    #sleep 1;
+    sleep 1;
     #RECOVERSTORAGE=$(cp -rf $JTMPB $JTMP);
     #RECOVERY=$(echo -e "\\t\\t $RED--> Recovery in course please wait around 10 minutes$NC");
     #GHASH=$(cat /datak/genesis-hash.txt); 
@@ -315,12 +314,12 @@ EXPLORER_CHECK()
 curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data "{\"query\":\"\n    query {\n      block (id: \\\"$LAST_HASH\\\") {\n        id\n      }\n    }\n  \"}" | grep "\"block\":{\"id\":\"$LAST_HASH\"" &> $LOG_DIRECTORY/explorer.check.log;
 RESU=$?;
 
-if [ $RESU -gt 0 ]; then
-    STATUS="$RED- HASH NOT IN EPLORER! -$NC"
+if [[ $FLATLINERSCOUNTER -gt 0  &&  $RESU -gt 0 ]]; then
+    STATUS="$RED- HASH NOT IN EPLORER and FLATLINER DETECTED n:$FLATLINERSCOUNTER -$NC"
 elif [ $FLATLINERSCOUNTER -gt 0 ]; then
     STATUS="$RED- FLATLINER DETECTED! n:$FLATLINERSCOUNTER -$NC"
-elif [ $FLATLINERSCOUNTER -gt 0 ] && [ $RESU -gt 0 ]; then
-    STATUS="$RED- HASH NOT IN EPLORER and FLATLINER DETECTED n:$FLATLINERSCOUNTER -$NC"
+elif [ $RESU -gt 0 ]; then
+    STATUS="$RED- HASH NOT IN EPLORER! -$NC"
 else
     STATUS="$GREEN - Looking Good! - $NC"
 fi
@@ -374,7 +373,7 @@ do
     POOLTOOL;
     EXPLORER_CHECK;
     FLATLINERS_CHECK;
-        if ([ "$RESU" -gt 0 ] && [[ "$PoolToolHeight" != "$lastBlockHeight" || "$PoolToolHeight" == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
+        if ([ "$RESU" -gt 0 ] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
         then
              echo -e "\\t\\t-->  Evaluating Recovery Restart ";
              sleep $FREQ;
@@ -385,10 +384,8 @@ do
                 FLATLINERS_CHECK;
                 POOLTOOL;
                 PRINT_SCREEN;
-                        if ([ "$RESU" -gt 0 ] && [[ "$PoolToolHeight" != "$lastBlockHeight" || "$PoolToolHeight" == "000000" ]] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
+                        if ([ "$RESU" -gt 0 ] && [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_delay)) ]]) || [[ "$lastBlockHeight" -lt $(($PoolT_max - $Block_diff)) ]] || [[ "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
                         then
-                            #echo "RESU:$RESU";
-                            #echo "FLAT:$FLATLINERSCOUNTER";
                             sleep 2;
                             echo -e "Try: $RED$TRY$NC/$ORANGE$RECOVERY_CYCLES$NC before recovery restart.";
 
@@ -401,7 +398,7 @@ do
                                 # RECOVERY RESTART CONDITIONS
                                 if [[ "$TRY" -eq "$RECOVERY_CYCLES" || "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
                                 then
-                                    echo -e "\\n \\t\\t$RED--> Try:$TRY and/or FLATLINERSCOUNTER:$FLATLINERSCOUNTER !!! \\n\\t\\t--> Recovering...$NC";
+                                    echo -e "\\n\\t\\t$RED--> Try:$TRY and/or FLATLINERSCOUNTER:$FLATLINERSCOUNTER !!! \\n\\t--> Recovering...$NC";
                                     RECOVERY_RESTART;
                                     TRY="$RECOVERY_CYCLES";
                                     let TRY+=1;
