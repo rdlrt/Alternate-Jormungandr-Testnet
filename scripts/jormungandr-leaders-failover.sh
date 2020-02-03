@@ -43,13 +43,21 @@ do
     echo "Node Down, Failover not possible: $i $lBH1 $lBH2 - $diffepochend $J1_URL $J2_URL"
   else
     hdiff=$(( $lBH2 - $lBH1 ))
+    lBD=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockDate)
     # The echo command below is only for troubleshooting while initially setting up, take it out
-    echo $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL
-    if [ $diffepochend -lt $(($slotDuration+5)) ]; then # Adds a small probability of creating an adversarial fork if assigned for last 3 slots of the epoch, or first 3 slots of next epoch
+    echo $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL $lBD
+    if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Note: Adds a remote (2/43200) probability of creating an adversarial fork if assigned a leadership slot right at the epoch transition
       echo "Adding keys to both nodes for epoch transition:"
       # Based on this script J1 is active and will always have the leader key, so add to J2
       jcli rest v0 leaders post -f $jkey -h $J2_URL
-      sleep $(($slotDuration+10))
+      sleep $(($slotDuration+1))
+      J2LEADSLOTCNT=0
+      # Wait in a loop until we see the leader logs fulfilled before doing a delete
+      while(test "$J2LEADSLOTCNT" -eq 0)
+      do
+        sleep 1
+        J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
+      done
       jcli rest v0 leaders delete 1 -h $J2_URL
     fi
     # Change if appropriate to your case: The extract below assumes your leaders will only have 1 key, and that leader ID 1(referred later for delete) points to the pool used for failover
