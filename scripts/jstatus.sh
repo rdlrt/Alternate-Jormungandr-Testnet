@@ -53,7 +53,7 @@
 ## Configuration Parameters 
 #
 ## Rewards directory dump
-#export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/path
+#export JORMUNGANDR_REWARD_DUMP_DIRECTORY=/tmp/
 
 ## ITN Genesis
 GENESISHASH="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
@@ -64,14 +64,10 @@ THIS_GENESIS="8e4d2a343f3dcf93"                     # We only actually look at t
 #export MY_POOL_ID="YOUR-POOL-ID"                   # Your Pool public ID - IMPORTANT FOR POOL STATS!
 #export MY_USER_ID="YOUR-POOLTOOL-ID"               # on pooltool website get this from your account profile page
 
-## Log PATH
-#
-LOG_DIRECTORY="/tmp";
-
 ## BACKUP
 #JTMP="/datak/jormungandr-storage";                  # Jormugandr Storage PATH (must match your storage settings PATH in your node-config.yaml)
                                                     # If set it will enable automatic backup 
-JTMPB="/tmp/jormungandr-storage_backup"           # Backup destination
+JTMPB="/datak/jormungandr-storage_backup"           # Backup destination
 
 BACKUPCYCLES=5                                     # Backup window  FREQ x BACKUPCYCLES = trigger backup procedure
 
@@ -90,14 +86,13 @@ BACKUPCYCLES=5                                     # Backup window  FREQ x BACKU
 #TG_ChatId="xxxxxxxxx"
 #TG_URL="https://api.telegram.org/bot${TG_BotToken}/sendMessage?chat_id=${TG_ChatId}&parse_mode=Markdown"
 
-
-ALERT_MINIMUM=2      # minimum test loops pefore pager alert
+ALERT_MINIMUM=0      # minimum test loops pefore pager alert
 
 ## Cycles Time frequency in seconds:
 #
-FREQ=60                 # Normal Operation Refresh Frequency in seconds
+FREQ=50                 # Normal Operation Refresh Frequency in seconds
 
-FORK_FREQ=120           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
+FORK_FREQ=110           # Forck Check - Warning Mode Refresh Frequency in seconds between checks. after 13 consecutive failed attempts to check 
                         # the last block hash the script will try to do the recovery steps if any. See RECOVERY_RESTART().
 
 RECOVERY_CYCLES=13      # How many times will the test cycle (Explorer Website check  + PoolTool check) with consecutive errors
@@ -108,9 +103,13 @@ FLATCYCLES=3            # Every Cycle FREQ lastblockheight will be checked and i
 
 ## Block difference checks for stucked nodes
 #
-Block_diff=20  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
+Block_diff=30  # Block_diff is a isolated check which alone will trigger 1 of 13 warning alerts befor calling the function RESTART_RECOVERY - Explorer will be out of the checks chain
 Block_delay=10  # Block_delay is part of the double check algorithm with the comparison of the shellyExplorer (the combination of 1 Hash not found and Lastblock heigh < 20 blocks trigger 1 of 13 consecutives alerts before triggering the recovery)
 
+
+## Log PATH
+#
+LOG_DIRECTORY="/tmp";
 
 ## Clolors palette
 #
@@ -129,7 +128,7 @@ JVERSION="J-Ver: $BOLD$VERSION$NC";
 
 clear;
 echo -e "\\t\\t$BOLD--   jstatus WatchDog   --$NC";
-echo -e "\\t\\t$LGRAY1       v1.1.9   2020 $NC\\n\\n";
+echo -e "\\t\\t$LGRAY1       v1.1.9b   2020 $NC\\n\\n";
 echo -e "\\t\\t$LGRAY1 Loading... $JVERSION $NC\\n\\n";
 
 [ -f CLI ] && [ -f jcli ] && CLI="./jcli"
@@ -150,13 +149,13 @@ elif [ "$lastBlockHeight" != "" ];
     PTSUBMISSION=$(echo "-> $PoolToolHeight <-");
     PoolToolWinLossURL="https://pooltool.s3-us-west-2.amazonaws.com/8e4d2a3/pools/$MY_POOL_ID/byepoch/$lastBlockDateSlot/winloss.json";
     PoolToolWinLoss=$(curl -s -G -o $LOG_DIRECTORY/winloss.json $PoolToolWinLossURL);
-    grep players $LOG_DIRECTORY/winloss.json &> /dev/null;
+    grep "w\":" $LOG_DIRECTORY/winloss.json &> /dev/null;
     EMTYWIN=$?;
     if [[ "$EMTYWIN" == 0 ]];
     then
         WIN=$(jq -r .w $LOG_DIRECTORY/winloss.json );
         LOSS=$(jq -r .l $LOG_DIRECTORY/winloss.json );
-        PRINTWL="- MLS Won:$GREEN$WIN$NC Lost:$LGREEN$LOSS$NC";
+        PRINTWL="- MLS Won:$GREEN$WIN$NC Lost:$LGREEN$LOSS$NC ";
     else
         PRINTWL="";
     fi
@@ -185,6 +184,7 @@ sleep 1;
 
 INIT_JSTATS()
 {
+sleep 5;
 DATE=$(date);
 ORA=$(date +"%H");
 NEWORA="10#$ORA"
@@ -225,11 +225,12 @@ if [ $MY_POOL_ID ];
     LASTPOOLREWARDS="PoolRewards:\\t$REW$LAST_EPOCH_POOL_REWARDS$NC";
     LASTREWARDS="DelegRewards:\\t$REW$LAST_EPOCH_POOL_DEL_REWARDS$NC";
 
-    POOLINFO="-> $POOL_DELEGATED_STAKE\\t- $LASTREWARDS\\t- $LASTPOOLREWARDS\\n\\n-> Made:$GREEN$CONCHAIN$NC/$LGREEN$BLOCKS_MADE$NC $PRINTWL - Rejected:$RED$BLOCKS_REJECTED$NC - Slots:$ORANGE$SLOTS$NC/$TOTS - Planned(b/h):$BOLD$NEXT_SLOTS$NC\\n";
+    POOLINFO="-> $POOL_DELEGATED_STAKE\\t- $LASTREWARDS\\t- $LASTPOOLREWARDS\\n\\n-> Made:$GREEN$CONCHAIN$NC/$LGREEN$BLOCKS_MADE$NC $PRINTWL- Rejected:$RED$BLOCKS_REJECTED$NC - Slots:$ORANGE$SLOTS$NC/$TOTS - Planned(b/h):$BOLD$NEXT_SLOTS$NC\\n";
     else
     POOLINFO="";
 fi
 
+sleep 1;
 curl -s 'https://explorer.incentivized-testnet.iohkdev.io/explorer/graphql' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H "Referer: https://shelleyexplorer.cardano.org/en/block/$LAST_HASH/" -H 'Content-Type: application/json' -H 'Origin: https://shelleyexplorer.cardano.org' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'TE: Trailers' --data-binary "{\"query\":\"\n    query {\n      stakePool (id:\\\"$MY_POOL_ID\\\") {\n        blocks (last: 10000) {\n          totalCount\n          edges {\n            cursor\n            node {\n              \n  id\n  date {\n    slot\n    epoch {\n      \n  id\n  firstBlock {\n    id\n  }\n  lastBlock {\n    id\n  }\n  totalBlocks\n\n    }\n  }\n            }\n          }\n        }\n      }\n    }\n  \"}" | jq -r . > $LOG_DIRECTORY/onchainblocks.json                        
 QRESU=$?;
 
@@ -245,7 +246,6 @@ LOGHISTORY="$LOG_DIRECTORY/$lastBlockDateSlot.leaders_logs.1";
 REJLOGS="$LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_logs";
 REJLOGSU="$LOG_DIRECTORY/$lastBlockDateSlot.leaders_rej_uniq_logs";
 ESLEADERS="$LOG_DIRECTORY/$lastBlockDateSlot.EpochSlots.log";
-PRIMADI=$(stat -c %y $ESLEADERS | awk '{print $2}' | cut -d "." -f 1);
 
 if [ -f $ESLEADERS ]
 then
@@ -279,8 +279,13 @@ echo -e "-> HOST:$BOLD$HOSTN$NC  Blocks:$BOLD$TONCHAIN$NC  Epoch:$BOLD$lastBlock
 echo -e " ";
 echo -e "-> RecvCnt:\\t$LGRAY$blockRecvCnt$NC \\t- BlockHeight:\\t$BHEIGHT-> $lastBlockHeight $PTSUBMISSION$NC";
 echo -e "-> BlockTx:\\t$LGRAY$lastBlockTx$NC \\t- $POOLTOOLSTAS";
+if [ $peerUnreachableCnt != null ] 
+then
 echo -e "-> PUnreach:\\t$RED$peerUnreachableCnt$NC \\t- PAvail:\\t$BOLD$peerAvailableCnt$NC \\t- PQuarantined:\\t$ORANGE$peerQuarantinedCnt$NC";
 echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC";
+else
+echo -e "-> UniqIP:\\t$CYAN$watch_node$NC \\t- Established:\\t$BOLD$nodesEstablished$NC \\t- Quarantined:\\t$ORANGE$Quarantined$NC";
+fi
 if [ $MY_POOL_ID ]; 
 then
 echo -e "$POOLINFO";
@@ -302,19 +307,8 @@ echo "$DATE, $VERSION, $HOSTN, $TONCHAIN, $lastBlockDateSlotFull, $uptime, $last
 
 RECOVERY_RESTART()
 {
-    echo -e "\\t\\t\\t $RED--> We're ... Restarting! <--$NC";
-    #AUE=$(curl -s -X POST "http://172.13.0.4/message?token=Ap59j48LrTeyvQx" -F "title=$HOSTN Fork Restart" -F "message=Restarting!!" -F "priority=$TRY");
-    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
-    #jshutdown=$(CLI shutdown get);
-    #sleep 2;
-    #jshutdown2=$(ps max | grep jorm | grep config | awk '{print $1}');
-    #jshutdown3=$(kill -9 $jshutdown2 );
-    #CLEANDB=$(rm -rf $JTMP);
-    #sleep 1;
-    #RECOVERSTORAGE=$(cp -rf $JTMPB $JTMP);
-    #RECOVERY=$(echo -e "\\t\\t $RED--> Recovery in course please wait around 10 minutes$NC");
-    #GHASH=$(cat /datak/genesis-hash.txt); 
-    #START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/Stakelovelace/secret.yaml --genesis-block-hash $GHASH &> $LOG_DIRECTORY/$HOSTN.log &);
+    echo -e "$RED--> We're ... Restarting! <--$NC";
+    # HERE YOU RECOVER INSTRUCTION
 }
 
 PAGER()
@@ -459,7 +453,7 @@ do
                                 # RECOVERY RESTART CONDITIONS
                                 if [[ "$TRY" -eq "$RECOVERY_CYCLES" || "$FLATLINERSCOUNTER" -gt "$FLATCYCLES" ]];
                                 then
-                                    echo -e "\\n\\t\\t$RED--> Try:$TRY and/or FLATLINERSCOUNTER:$FLATLINERSCOUNTER !!! \\n\\t--> Recovering...$NC";
+                                    echo -e "\\n\\t$RED--> Try:$TRY and/or FLATLINERSCOUNTER:$FLATLINERSCOUNTER !!! \\n\\t--> Recovering...$NC";
                                     RECOVERY_RESTART;
                                     TRY="$RECOVERY_CYCLES";
                                     let TRY+=1;
