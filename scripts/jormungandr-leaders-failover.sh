@@ -36,6 +36,7 @@
 #     [Install]
 #     WantedBy=multi-user.target
 
+tput reset
 shopt -s expand_aliases
 
 ##########################
@@ -101,7 +102,7 @@ do
     hdiff=$(( $lBH2 - $lBH1 ))
     lBD=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockDate)
     # The echo command below is only for troubleshooting while initially setting up, take it out
-    echo -en "\r$(date +%D-%T) -  $i $lBH1 $lBH2 $hdiff $diffepochend $J1_URL $lBD"
+    echo -en "\r$(date +%d/%m-%T) - $lBH1 $hdiff $diffepochend $(echo $J1_URL |cut -d/ -f3|cut -d: -f2) $lBD"
     if [ $diffepochend -lt $(($slotDuration+1)) ]; then # Note: Adds a remote (2/43200) probability of creating an adversarial fork if assigned a leadership slot right at the epoch transition
       echo -e "$(date +%D-%T) - Adding keys to both nodes for epoch transition"
       # Based on this script J1 is active and will always have the leader key, so add to J2
@@ -126,9 +127,9 @@ do
         if [ $J1LEADCNT -gt 1 ]; then
           jcli rest v0 leaders delete $J1LEADCNT -h $J1_URL > /dev/null
           loopchk=1
-		fi
-	  else
-		jcli rest v0 leaders post -f $jkey -h $J1_URL > /dev/null
+        fi
+      else
+        jcli rest v0 leaders post -f $jkey -h $J1_URL > /dev/null
       fi
     done
 
