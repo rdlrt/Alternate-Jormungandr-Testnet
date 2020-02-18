@@ -77,8 +77,10 @@ slotsPerEpoch=$(cat $jsettingsf | jq -r .slotsPerEpoch)
 jormVersion=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .version)
 rm -f /tmp/.jormu_settings.delme
 i=0
-timeout=30 # Number of slots to test before taking action on node that's behind. On ITN, value of 30 for $timeout means 60 seconds
+timeout=300 # Number of iterations before taking action on node that's behind
+
 j=1
+
 while (test "$i" -le $timeout )
 do
   lBH1=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockHeight)
@@ -109,11 +111,17 @@ do
       jcli rest v0 leaders post -f $jkey -h $J2_URL > /dev/null
       sleep $(($slotDuration+1))
       J2LEADSLOTCNT=0
-      # Wait in a loop until we see the leader logs fulfilled before doing a delete
+      epochtranscnt=0
       while(test "$J2LEADSLOTCNT" -eq 0)
       do
-        sleep 1
-        J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
+        sleep $(($slotDuration/2))
+        echo -en "\r$(date +%d/%m-%T) - Waiting for node at $J2_URL to have a pending slot in current epoch $((epochtranscnt++)) out of $timeout times.."
+        if [ $epochtranscnt -gt $timeout ]; then
+          echo -e "$(date +%D-%T) - Timeout reached waiting for leader logs at epoch transition, resuming failover capabilities.."
+          J2LEADSLOTCNT=-1 #quit the loop because of timeout
+        else
+          J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
+        fi
       done
       jcli rest v0 leaders delete 1 -h $J2_URL > /dev/null
     fi
@@ -156,8 +164,9 @@ do
     elif [ "$hdiff" -lt -5 ]; then
       echo -e "\n$(date +%D-%T) - J2 found to be behind J1 $((i++ + 1)) times"
       if [ "$i" -ge $timeout ]; then
-        # Restarting the node is not a good solution for the network, and if used - should only be a temporary remidiation. Starting from 0.8.6, the node is able to catch up fine without restart
-        #jcli rest v0 shutdown get -h $J2_URL
+        # Comment the line below if you do not experience hang of nodes.
+        # Restarting the node is not a good solution for the network, and if used - should only be a temporary remediation. Starting from 0.8.6, the node is able to catch up fine without restart
+        jcli rest v0 shutdown get -h $J2_URL
         echo -e "$(date +%D-%T) - J2 has been stuck; Resetting due to timeout..\n" >> /tmp/killjormu.log >&2
         i=0
       fi
