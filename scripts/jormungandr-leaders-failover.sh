@@ -49,7 +49,6 @@ shopt -s expand_aliases
 autorestart="N" # To restart the node that's behind 
 jkey=~/jormu/priv/pool-secret.yaml
 POOLTOOL_UID_FILE=~/jormu/priv/pooltool.uid # Grab this by login to https://pooltool.io/profile
-GENESIS="8e4d2a343f3dcf9330ad9035b3e8d168e6728904262f2c434a4f8f934ec7b676"
 J1_URL=http://127.0.0.1:4100/api ## Assumes two nodes operating on same host on different ports, change to method as desired
 J2_URL=http://127.0.0.1:4101/api ## It is *NOT* recommended to publish your API endpoint to non trusted client connections
 timeout=300 # Number of iterations before taking action on node that's behind, no reason to reduce this if your node is working fine
@@ -92,7 +91,7 @@ if [ $rc -ne 0 ]; then
 fi
 slotDuration=$(cat $jsettingsf | jq -r .slotDuration)
 slotsPerEpoch=$(cat $jsettingsf | jq -r .slotsPerEpoch)
-GENESIS=$(jcli rest v0 settings get --output-format json | jq -r .block0Hash)
+GENESIS=$(cat $jsettingsf | jq -r .block0Hash)
 jormVersion=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .version)
 rm -f /tmp/.jormu_settings.delme
 
@@ -194,7 +193,7 @@ do
       # if blockheight of J2 is behind by more than 5 blocks for $timeout itertions take action if auto restart is set to yes.
       echom 2 "Last Sync Difference: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2) was behind $(echo $J1_URL |cut -d/ -f3|cut -d: -f2) $((i++ + 1)) time(s)"
       if [ "$i" -ge $timeout ]; then
-        if [ "${autorestart}" == "N" ]; then
+        if [ "${autorestart}" != "N" ]; then
           jcli rest v0 shutdown get -h $J2_URL
           echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
         fi
