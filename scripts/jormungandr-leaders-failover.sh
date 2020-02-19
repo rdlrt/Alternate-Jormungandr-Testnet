@@ -196,7 +196,7 @@ do
       if [ "$i" -ge $timeout ]; then
         if [ "${autorestart}" == "N" ]; then
           jcli rest v0 shutdown get -h $J2_URL
-          echom 8 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
+          echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
         fi
         i=0
       fi
