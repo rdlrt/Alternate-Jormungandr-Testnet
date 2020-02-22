@@ -107,7 +107,7 @@ do
   jcli rest v0 node stats get --output-format json -h $J1_URL 2>/dev/null 1>$j1statsf
   jcli rest v0 node stats get --output-format json -h $J2_URL 2>/dev/null 1>$j2statsf
   lBH1=$(cat $j1statsf | jq -r .lastBlockHeight)
-  lBH2=$(jcli rest v0 node stats get --output-format json -h $J2_URL | jq -r .lastBlockHeight)
+  lBH2=$(cat $j2statsf | jq -r .lastBlockHeight)
   lBD=$(cat $j1statsf | jq -r .lastBlockDate)
   currslot=$(( (($(date +%s)-1576264417)%($slotsPerEpoch*$slotDuration))/$slotDuration ))
   diffepochend=$(expr $slotsPerEpoch - $currslot)
