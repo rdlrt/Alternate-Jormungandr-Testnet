@@ -376,20 +376,20 @@ fi
 RECOVERY_RESTART()
 {
     STATUS="$RED--> We're ... Restarting! <--$NC";
-    TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
-    jshutdown=$(CLI shutdown get);
+    #TGAUE=$(curl -s -X POST $TG_URL -d text="$HOSTN Recovery Restart %0AFLATLINERSCOUNTER:$FLATLINERSCOUNTER %0ATRY:$TRY %0AHASH: $LAST_HASH %0APOOLTHEIGHT: $PoolT_max %0APOOLINFO DS: $POOL_DELEGATED_STAKEQ LR: $LAST_EPOCH_POOL_REWARDS");
+    #jshutdown=$(CLI shutdown get);
     sleep 2;
-    CLEANDB=$(rm -rf $JTMP);
-    jshutdown2=$(ps max | grep jorm | grep config | awk '{print $1}');
-    jshutdown3=$(kill -9 $jshutdown2 2&> /dev/null );
-    jshutdown4=$(killall ~/jormungandr/jormungandr 2&> /dev/null );
-    CLEANDB=$(rm -rf $JTMP);
+    #CLEANDB=$(rm -rf $JTMP);
+    #jshutdown2=$(ps max | grep jorm | grep config | awk '{print $1}');
+    #jshutdown3=$(kill -9 $jshutdown2 2&> /dev/null );
+    #jshutdown4=$(killall ~/jormungandr/jormungandr 2&> /dev/null );
+    #CLEANDB=$(rm -rf $JTMP);
     sleep 1;
-    RECOVERSTORAGE=$(cp -rf $JTMPB $JTMP);
-    MVLOG=$(mv $LOG_DIRECTORY/$HOSTN.log /datak/$HOSTN.log.bk);
-    RECOVERY=$(echo -e "\\t\\t $RED--> Recovery in course please wait around 10 minutes$NC");
-    GHASH=$(cat /datak/genesis-hash.txt); 
-    START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/Stakelovelace/secret.yaml --genesis-block-hash $GHASH &>> $LOG_DIRECTORY/$HOSTN.log &);
+    #RECOVERSTORAGE=$(cp -rf $JTMPB $JTMP);
+    #MVLOG=$(mv $LOG_DIRECTORY/$HOSTN.log /datak/$HOSTN.log.bk);
+    #RECOVERY=$(echo -e "\\t\\t $RED--> Recovery in course please wait around 10 minutes$NC");
+    #GHASH=$(cat /datak/genesis-hash.txt); 
+    #START_JORGP=$(/root/jormungandr/jormungandr --config /datak/node-config.yaml --secret /datak/pool/Stakelovelace/secret.yaml --genesis-block-hash $GHASH &>> $LOG_DIRECTORY/$HOSTN.log &);
 }
 
 PAGER()
