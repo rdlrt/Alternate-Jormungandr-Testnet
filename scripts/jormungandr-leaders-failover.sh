@@ -46,12 +46,14 @@ shopt -s expand_aliases
 ##########################
 # Variables to modify
 ##########################
+
 autorestart="N" # To restart the node that's behind 
 jkey=~/jormu/priv/pool-secret.yaml
 POOLTOOL_UID_FILE=~/jormu/priv/pooltool.uid # Grab this by login to https://pooltool.io/profile
 J1_URL=http://127.0.0.1:4100/api ## Assumes two nodes operating on same host on different ports, change to method as desired
 J2_URL=http://127.0.0.1:4101/api ## It is *NOT* recommended to publish your API endpoint to non trusted client connections
 timeout=300 # Number of iterations before taking action on node that's behind, no reason to reduce this if your node is working fine
+jlogsf=~/jormu/logs #folder for leader history and temporary files
 
 ##########################
 # Do not modify below
@@ -59,11 +61,10 @@ timeout=300 # Number of iterations before taking action on node that's behind, n
 
 POOL_ID=$(grep node_id $jkey |awk '{print $2}') # assumes you use the YAML2 (default) format for your node keys
 platformName="jormungandr-leaders-failover.sh"
-jsettingsf="/tmp/.jormu_settings.delme"
-j1statsf="/tmp/.jormu_stats1.delme"
-j2statsf="/tmp/.jormu_stats2.delme"
-pooltoolf="/tmp/.pooltoolresponse.delme"
-jleadf="/tmp/.jlead.delme"
+jsettingsf="$jlogsf/.settings.delme"
+j1statsf="$jlogsf/.stats1.delme"
+j2statsf="$jlogsf/.stats2.delme"
+pooltoolf="$jlogsf/.pooltoolresponse.delme"
 # Counters
 i=0
 j=1
@@ -100,6 +101,8 @@ echom 1 "Status: Date: <NA> Height: <NA> Active: $(echo $J1_URL |cut -d/ -f3|cut
 echom 2 "Last Sync Difference: <NA>"
 echom 3 "Leader key moved to node at port: $(echo $J1_URL |cut -d/ -f3|cut -d: -f2)"
 echom 4 "Last Pooltool response: <NA>"
+
+exec 2>$jlogsf/stderr.log
 
 # Main Leader Failover loop , note that the test condition will/should never satisfy - if it did, then you modified something incorrectly below (converse is not true)
 while (test "$i" -le $timeout )
@@ -144,7 +147,7 @@ do
           sleep $(($slotDuration/2))
           J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
           if [ $J2LEADSLOTCNT -gt 0 ]; then
-            jcli rest v0 leaders logs get | grep -e scheduled | awk 'NR%2{printf "%s ",$0;next;}1' | sed -e s/scheduled_at_//g  | sort -V | column -t > $jleadf
+            jcli rest v0 leaders logs get | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $jlogsf/leaders_$(date +%D_%T)
             echom 8 " - Complete: Schedule loaded successfully"
           fi
         fi
