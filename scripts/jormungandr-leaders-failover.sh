@@ -147,7 +147,7 @@ do
           sleep $(($slotDuration/2))
           J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
           if [ $J2LEADSLOTCNT -gt 0 ]; then
-            jcli rest v0 leaders logs get | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $jlogsf/leaders_$(date +%D_%T)
+            jcli rest v0 leaders logs get -h $J2_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $jlogsf/leaders_$(date +%d_%mT%T)
             echom 8 " - Complete: Schedule loaded successfully"
           fi
         fi
@@ -197,7 +197,7 @@ do
       echom 2 "Last Sync Difference: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2) was behind $(echo $J1_URL |cut -d/ -f3|cut -d: -f2) $((i++ + 1)) time(s)"
       if [ "$i" -ge $timeout ]; then
         if [ "${autorestart}" != "N" ]; then
-          jcli rest v0 shutdown get -h $J2_URL
+          jcli rest v0 shutdown get -h $J2_URL 2>&1 > /dev/null
           echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
         fi
         i=0
