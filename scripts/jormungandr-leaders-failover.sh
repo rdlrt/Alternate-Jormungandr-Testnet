@@ -134,19 +134,21 @@ do
       # Based on this script J1 is active and will always have the leader key, so only add to J2
       jcli rest v0 leaders post -f $jkey -h $J2_URL > /dev/null
       sleep $(($slotDuration+1))
+      J1LEADSLOTCNT=0
       J2LEADSLOTCNT=0
       epochtranscnt=0
-      while(test "$J2LEADSLOTCNT" -eq 0)
+      while [ "$J1LEADSLOTCNT" -eq 0 -o "$J2LEADSLOTCNT" -eq 0 ]; do
       # Loop waiting for leadership scheduler to fill atleast one slot to new epoch - else use $timeout to proceed
-      do
         if [ $epochtranscnt -gt $timeout ]; then
           J2LEADSLOTCNT=-1
+          J1LEADSLOTCNT=-1
           echom 8 " - Complete: No slots scheduled for this epoch (timeout reached)"
         else
           echom 7 " - Processing: Waiting for a leadership slot for node $J2_URL - ($((epochtranscnt++))/$timeout)  time(s).."
           sleep $(($slotDuration/2))
+          J1LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J1_URL | grep "wake_at_time: ~"  | wc -l)
           J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
-          if [ $J2LEADSLOTCNT -gt 0 ]; then
+          if [ $J1LEADSLOTCNT -gt 0 -a $J2LEADSLOTCNT -gt 0]; then
             jcli rest v0 leaders logs get -h $J2_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $jlogsf/leaders_$(date +%d_%mT%T)
             echom 8 " - Complete: Schedule loaded successfully"
           fi
