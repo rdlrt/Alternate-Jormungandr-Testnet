@@ -107,8 +107,8 @@ exec 2>$jlogsf/stderr.log
 # Main Leader Failover loop , note that the test condition will/should never satisfy - if it did, then you modified something incorrectly below (converse is not true)
 while (test "$i" -le $timeout )
 do
-  jcli rest v0 node stats get --output-format json -h $J1_URL 2>/dev/null 1>$j1statsf
-  jcli rest v0 node stats get --output-format json -h $J2_URL 2>/dev/null 1>$j2statsf
+  jcli rest v0 node stats get --output-format json -h $J1_URL 1>$j1statsf 2>/dev/null
+  jcli rest v0 node stats get --output-format json -h $J2_URL 1>$j2statsf 2>/dev/null
   lBH1=$(cat $j1statsf | jq -r .lastBlockHeight)
   lBH2=$(cat $j2statsf | jq -r .lastBlockHeight)
   lBD=$(cat $j1statsf | jq -r .lastBlockDate)
@@ -116,9 +116,9 @@ do
   diffepochend=$(expr $slotsPerEpoch - $currslot)
   if [ -z "${lBH1}" ] || [ "${lBH1}" == "null" ] ;then
     # Expect delete calls to fail, and hence send output of those delete calls to /dev/null.
-    jcli rest v0 leaders delete 1 -h $J2_URL 2>&1 >/dev/null
-    jcli rest v0 leaders post -f $jkey -h $J2_URL 2>&1 >/dev/null
-    jcli rest v0 leaders delete 1 -h $J1_URL 2>&1 >/dev/null
+    jcli rest v0 leaders delete 1 -h $J2_URL >/dev/null 2>&1
+    jcli rest v0 leaders post -f $jkey -h $J2_URL >/dev/null 2>&1
+    jcli rest v0 leaders delete 1 -h $J1_URL >/dev/null 2>&1
     setURLvars $J2_URL $J1_URL
     echom 1 "Node $(echo $J2_URL |cut -d/ -f3|cut -d: -f2) Down: Height: $lBH2 Active: $(echo $J1_URL |cut -d/ -f3|cut -d: -f2)"
   elif [ -z "${lBH2}" ] || [ "${lBH2}" == "null" ]; then
@@ -197,7 +197,7 @@ do
       echom 2 "Last Sync Difference: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2) was behind $(echo $J1_URL |cut -d/ -f3|cut -d: -f2) $((i++ + 1)) time(s)"
       if [ "$i" -ge $timeout ]; then
         if [ "${autorestart}" != "N" ]; then
-          jcli rest v0 shutdown get -h $J2_URL 2>&1 > /dev/null
+          jcli rest v0 shutdown get -h $J2_URL > /dev/null
           echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
         fi
         i=0
@@ -214,7 +214,7 @@ do
     lastParent=${lastBlock:104:64}
     lastSlot=$((0x${lastBlock:24:8}))
     lastEpoch=$((0x${lastBlock:16:8}))
-    curl -s -G --data-urlencode "platform=$platformName" --data-urlencode "jormver=$jormVersion" "https://api.pooltool.io/v0/sharemytip?poolid=${POOL_ID}&userid=$(cat $POOLTOOL_UID_FILE)&genesispref=${GENESIS}&mytip=${lBH1}&lasthash=${lastBlockHash}&lastpool=${lastPoolID}&lastparent=${lastParent}&lastslot=${lastSlot}&lastepoch=${lastEpoch}" 2>/dev/null > $pooltoolf
+    curl -s -G --data-urlencode "platform=$platformName" --data-urlencode "jormver=$jormVersion" "https://api.pooltool.io/v0/sharemytip?poolid=${POOL_ID}&userid=$(cat $POOLTOOL_UID_FILE)&genesispref=${GENESIS}&mytip=${lBH1}&lasthash=${lastBlockHash}&lastpool=${lastPoolID}&lastparent=${lastParent}&lastslot=${lastSlot}&lastepoch=${lastEpoch}" > $pooltoolf 2>/dev/null
     echom 4 "Last Pooltool response: Success: $(cat $pooltoolf | jq -r .success) MaxHeight: $(cat $pooltoolf | jq -r .pooltoolmax)"
 	  j=1
   fi
