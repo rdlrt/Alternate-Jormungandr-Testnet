@@ -47,8 +47,9 @@ shopt -s expand_aliases
 # Variables to modify
 ##########################
 
-autorestart="N" # To restart the node that's behind 
+autorestart="Y" # To restart the node that's behind 
 jkey=~/jormu/priv/pool-secret.yaml
+pooltoolreportmode=1 # 0: Dont report, 1: Report status without leadership info, 2: Report status with leadership stats
 POOLTOOL_UID_FILE=~/jormu/priv/pooltool.uid # Grab this by login to https://pooltool.io/profile
 J1_URL=http://127.0.0.1:4100/api ## Assumes two nodes operating on same host on different ports, change to method as desired
 J2_URL=http://127.0.0.1:4101/api ## It is *NOT* recommended to publish your API endpoint to non trusted client connections
@@ -68,6 +69,7 @@ pooltoolf="$jlogsf/.pooltoolresponse.delme"
 # Counters
 i=0
 j=1
+newepoch=0
 
 # Function to set/swap Leader URL vars
 function echom() {
@@ -144,17 +146,23 @@ do
           J1LEADSLOTCNT=-1
           echom 8 " - Complete: No slots scheduled for this epoch (timeout reached)"
         else
-          echom 7 " - Processing: Waiting for a leadership slot for node $J2_URL - ($((epochtranscnt++))/$timeout)  time(s).."
+          echom 7 " - Waiting for Schedule: Iteration - ($((epochtranscnt++))/$timeout) .."
           sleep $(($slotDuration/2))
           J1LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J1_URL | grep "wake_at_time: ~"  | wc -l)
           J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
-          if [ $J1LEADSLOTCNT -gt 0 -a $J2LEADSLOTCNT -gt 0]; then
-            jcli rest v0 leaders logs get -h $J2_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $jlogsf/leaders_$(date +%d_%mT%T)
+          if [ $J1LEADSLOTCNT -gt 0 -a $J2LEADSLOTCNT -gt 0 ]; then
+            logtmp=$jlogsf/leaders_$(date +%d_%mT%T)
+            jcli rest v0 leaders logs get -h $J2_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $logtmp
             echom 8 " - Complete: Schedule loaded successfully"
+          else
+            echom 8 " - Current Leader Slots: J1 - $J1LEADSLOTCNT, J2 - $J2LEADSLOTCNT"
+            J1LEADSLOTCNT=0
+            J2LEADSLOTCNT=0
           fi
         fi
       done
       jcli rest v0 leaders delete 1 -h $J2_URL > /dev/null
+      newepoch=1
     else
       # If not at epoch transition, make sure there is only 1 leader at a time
       # Ensure J1 has only 1 leader ID, delete others
@@ -183,6 +191,7 @@ do
         fi
       done
     fi
+
     sleep $(($slotDuration/2))
     if [ "$hdiff" -gt 0 ]; then
       echom 2 "Last Sync Difference: $(echo $J1_URL |cut -d/ -f3|cut -d: -f2) was behind $(echo $J2_URL |cut -d/ -f3|cut -d: -f2) $((i++ + 1)) time(s)"
@@ -191,8 +200,8 @@ do
         echom 3 "Leader key moved to node at port: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)"
         jcli rest v0 leaders post -f $jkey -h $J2_URL > /dev/null
         jcli rest v0 leaders delete 1 -h $J1_URL > /dev/null
-		    setURLvars $J2_URL $J1_URL
-		    i=0
+        setURLvars $J2_URL $J1_URL
+        i=0
       fi
     elif [ "$hdiff" -lt -5 ]; then
       # if blockheight of J2 is behind by more than 5 blocks for $timeout itertions take action if auto restart is set to yes.
@@ -200,7 +209,7 @@ do
       if [ "$i" -ge $timeout ]; then
         if [ "${autorestart}" != "N" ]; then
           jcli rest v0 shutdown get -h $J2_URL > /dev/null
-          echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> /tmp/killjormu.log >&2
+          echom 9 "Last Node Reset due to timeout: $(echo $J2_URL |cut -d/ -f3|cut -d: -f2)" >> $jlogsf/killjormu.log
         fi
         i=0
       fi
@@ -208,17 +217,45 @@ do
       i=0
     fi
   fi
-  # Report to Pooltool once in 14.5 * slotDuration seconds
-  if [ $(( j++ + 1)) -gt 15 ]; then
-    lastBlockHash=$(cat $j1statsf | jq -r .lastBlockHash)
-    lastBlock=$(jcli rest v0 block ${lastBlockHash} get -h $J1_URL 2>/dev/null)
-    lastPoolID=${lastBlock:168:64}
-    lastParent=${lastBlock:104:64}
-    lastSlot=$((0x${lastBlock:24:8}))
-    lastEpoch=$((0x${lastBlock:16:8}))
-    curl -s -G --data-urlencode "platform=$platformName" --data-urlencode "jormver=$jormVersion" "https://api.pooltool.io/v0/sharemytip?poolid=${POOL_ID}&userid=$(cat $POOLTOOL_UID_FILE)&genesispref=${GENESIS}&mytip=${lBH1}&lasthash=${lastBlockHash}&lastpool=${lastPoolID}&lastparent=${lastParent}&lastslot=${lastSlot}&lastepoch=${lastEpoch}" > $pooltoolf 2>/dev/null
-    echom 4 "Last Pooltool response: Success: $(cat $pooltoolf | jq -r .success) MaxHeight: $(cat $pooltoolf | jq -r .pooltoolmax)"
-	  j=1
+  # Report to Pooltool
+  if [ $pooltoolreportmode -gt 0 ]; then
+    # If first iteration post epoch transition, Send slots to pooltool - encrypted for current epoch, and key for previous epoch
+    if [ $newepoch -gt 0 ]; then
+      leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
+      epoch=$(cat $j1statsf | jq -r .lastBlockDate | cut -d. -f1)
+      prevepoch=$((epoch - 1))
+      slotsct=$(echo $leaderl| jq '. | length')
+      if [ $pooltoolreportmode -eq 2 ]; then
+        currslots=$(echo "$RESPONSE" | jq -c '[ .[] | select(.scheduled_at_date | startswith('\"$epoch\"')) ]')
+        if [ -f "${jlogsf}/key_${prevepoch}" ];then
+          prevepochkey=$(cat "${jlogsf}"/key_"${prevepoch}")
+	else
+          prevepochkey=''
+	fi
+        if [ -f "${jlogsf}"/key_"${epoch}" ];then
+          epochkey=$(cat "${jlogsf}"/key_"${epoch}")
+        else
+          epochkey=$(openssl rand -base64 32 | tee "${jlogsf}"/key_"${epoch}")
+        fi
+        currslots_enc=$(echo "${slotsct}" | gpg --symmetric --armor --batch --passphrase "${epochkey}")
+        json="$(jq -n --compact-output --arg epoch "$epoch" --arg poolid "$POOL_ID" --arg uid "$(cat $POOLTOOL_UID_FILE)" --arg genesis "$GENESIS" --arg slotsct "$slotsct" --arg prevepochkey "$prevepochkey" --arg currslots_enc "$currslots_enc" '{currentepoch: $epoch, poolid: $poolid, genesispref: $genesis, userid: $uid, assigned_slots: $slotsct, previous_epoch_key: $prevepochkey, encrypted_slots: $currslots_enc}')"
+        rc=$(curl -s -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "$json" "https://api.pooltool.io/v0/sendlogs")
+        echom 9 " - Pooltool Response for slot logs: $rc"
+      fi
+      newepoch=0
+    fi
+    # Report tip to Pooltool
+    if [ $(( j++ + 1)) -gt 8 ]; then
+      lastBlockHash=$(cat $j1statsf | jq -r .lastBlockHash)
+      lastBlock=$(jcli rest v0 block ${lastBlockHash} get -h $J1_URL 2>/dev/null)
+      lastPoolID=${lastBlock:168:64}
+      lastParent=${lastBlock:104:64}
+      lastSlot=$((0x${lastBlock:24:8}))
+      lastEpoch=$((0x${lastBlock:16:8}))
+      curl -s -G --data-urlencode "platform=$platformName" --data-urlencode "jormver=$jormVersion" "https://api.pooltool.io/v0/sharemytip?poolid=${POOL_ID}&userid=$(cat $POOLTOOL_UID_FILE)&genesispref=${GENESIS}&mytip=${lBH1}&lasthash=${lastBlockHash}&lastpool=${lastPoolID}&lastparent=${lastParent}&lastslot=${lastSlot}&lastepoch=${lastEpoch}" > $pooltoolf 2>/dev/null
+      echom 4 "Last Pooltool response: Success: $(cat $pooltoolf | jq -r .success) MaxHeight: $(cat $pooltoolf | jq -r .pooltoolmax)"
+      j=1
+    fi
   fi
   sleep $(($slotDuration/2))
 done
