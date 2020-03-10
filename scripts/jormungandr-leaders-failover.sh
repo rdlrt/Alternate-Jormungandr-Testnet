@@ -221,12 +221,12 @@ do
   if [ $pooltoolreportmode -gt 0 ]; then
     # If first iteration post epoch transition, Send slots to pooltool - encrypted for current epoch, and key for previous epoch
     if [ $newepoch -gt 0 ]; then
-      leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
-      epoch=$(cat $j1statsf | jq -r .lastBlockDate | cut -d. -f1)
-      prevepoch=$((epoch - 1))
-      slotsct=$(echo $leaderl| jq '. | length')
       if [ $pooltoolreportmode -eq 2 ]; then
+        leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
+        epoch=$(cat $j1statsf | jq -r .lastBlockDate | cut -d. -f1)
+        prevepoch=$((epoch - 1))
         currslots=$(echo "$RESPONSE" | jq -c '[ .[] | select(.scheduled_at_date | startswith('\"$epoch\"')) ]')
+        slotsct=$(echo "$currslots" | jq '. | length')
         if [ -f "${jlogsf}/key_${prevepoch}" ];then
           prevepochkey=$(cat "${jlogsf}"/key_"${prevepoch}")
 	else
@@ -237,7 +237,7 @@ do
         else
           epochkey=$(openssl rand -base64 32 | tee "${jlogsf}"/key_"${epoch}")
         fi
-        currslots_enc=$(echo "${slotsct}" | gpg --symmetric --armor --batch --passphrase "${epochkey}")
+        currslots_enc=$(echo "${currentslots}" | gpg --symmetric --armor --batch --passphrase "${epochkey}")
         json="$(jq -n --compact-output --arg epoch "$epoch" --arg poolid "$POOL_ID" --arg uid "$(cat $POOLTOOL_UID_FILE)" --arg genesis "$GENESIS" --arg slotsct "$slotsct" --arg prevepochkey "$prevepochkey" --arg currslots_enc "$currslots_enc" '{currentepoch: $epoch, poolid: $poolid, genesispref: $genesis, userid: $uid, assigned_slots: $slotsct, previous_epoch_key: $prevepochkey, encrypted_slots: $currslots_enc}')"
         rc=$(curl -s -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "$json" "https://api.pooltool.io/v0/sendlogs")
         echom 9 " - Pooltool Response for slot logs: $rc"
