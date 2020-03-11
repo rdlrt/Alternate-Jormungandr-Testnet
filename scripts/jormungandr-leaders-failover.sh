@@ -223,7 +223,7 @@ do
     if [ $newepoch -gt 0 ]; then
       if [ $pooltoolreportmode -eq 2 ]; then
         leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
-        epoch=$(cat $j1statsf | jq -r .lastBlockDate | cut -d. -f1)
+        epoch=$(curl -s ${J1_URL}/v0/node/stats | jq -r .lastBlockDate | cut -d. -f1)
         prevepoch=$((epoch - 1))
         currslots=$(echo "$leaderl" | jq -c '[ .[] | select(.scheduled_at_date | startswith('\"$epoch\"')) ]')
         slotsct=$(echo "$currslots" | jq '. | length')
