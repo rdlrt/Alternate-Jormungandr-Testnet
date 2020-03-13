@@ -95,7 +95,7 @@ curl -X POST -H "Content-Type: application/json" -d '{ "name": "pool_wallet", "m
 Important thing to get is the wallet id from this command
 
 ## 10.  Migrate your funds
-Now yuou are ready to migrate your wallet.  replace the ```<old wallet id>``` and ```<new wallet id>``` with the values you got above
+Now you are ready to migrate your wallet.  replace the ```<old wallet id>``` and ```<new wallet id>``` with the values you got above
 
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"passphrase": "areallylongpassword"}' http://localhost:3002/v2/byron-wallets/<old wallet id>/migrations/<new wallet id>
