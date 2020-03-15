@@ -229,9 +229,9 @@ do
         slotsct=$(echo "$currslots" | jq '. | length')
         if [ -f "${jlogsf}/key_${prevepoch}" ];then
           prevepochkey=$(cat "${jlogsf}"/key_"${prevepoch}")
-	else
+        else
           prevepochkey=''
-	fi
+        fi
         if [ -f "${jlogsf}"/key_"${epoch}" ];then
           epochkey=$(cat "${jlogsf}"/key_"${epoch}")
         else
