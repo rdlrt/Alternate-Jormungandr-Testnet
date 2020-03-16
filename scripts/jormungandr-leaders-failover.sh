@@ -222,8 +222,10 @@ do
     # If first iteration post epoch transition, Send slots to pooltool - encrypted for current epoch, and key for previous epoch
     if [ $newepoch -gt 0 ]; then
       if [ $pooltoolreportmode -eq 2 ]; then
-        leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
-        epoch=$(curl -s ${J1_URL}/v0/node/stats | jq -r .lastBlockDate | cut -d. -f1)
+        #leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
+        leaderl=$(jcli rest v0 leaders logs get --output-format json -h $J1_URL)
+        #epoch=$(curl -s ${J1_URL}/v0/node/stats | jq -r .lastBlockDate | cut -d. -f1)
+        epoch=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockDate | cut -d. -f1)
         prevepoch=$((epoch - 1))
         currslots=$(echo "$leaderl" | jq -c '[ .[] | select(.scheduled_at_date | startswith('\"$epoch\"')) ]')
         slotsct=$(echo "$currslots" | jq '. | length')

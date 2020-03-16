@@ -3,7 +3,7 @@
 - Remember: To avoid spamming logs of nodes of other network (invalid block0), please ensure to not re-use IP-port combination between different networks
 - Also Remember: Before starting node for the first time, ensure your storage folder is empty
 - Cap: Pools intending to run their stake pool have been distributed 1000000000 Test Lovelaces, would be great if we use it as a cap.
-- The information below is not complete and only intended for usage between the operators on this networks.
+- The information below is not complete and only intended for usage between the operators using these networks.
 - For helper scripts, these are either copies - or small modifications of IOHK provided helper scripts to keep them compatible with versions here.
 
 # Cardano Node (Haskell - PBFT) Testnet details
