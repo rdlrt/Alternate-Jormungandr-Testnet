@@ -224,8 +224,7 @@ do
       if [ $pooltoolreportmode -eq 2 ]; then
         #leaderl=$(curl -s ${J1_URL}/v0/leaders/logs)
         leaderl=$(jcli rest v0 leaders logs get --output-format json -h $J1_URL)
-        #epoch=$(curl -s ${J1_URL}/v0/node/stats | jq -r .lastBlockDate | cut -d. -f1)
-        epoch=$(jcli rest v0 node stats get --output-format json -h $J1_URL | jq -r .lastBlockDate | cut -d. -f1)
+        epoch=$(( (($(date +%s)-1576264417) / ($slotsPerEpoch*$slotDuration)) ))
         prevepoch=$((epoch - 1))
         currslots=$(echo "$leaderl" | jq -c '[ .[] | select(.scheduled_at_date | startswith('\"$epoch\"')) ]')
         slotsct=$(echo "$currslots" | jq '. | length')
