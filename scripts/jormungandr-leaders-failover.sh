@@ -238,7 +238,7 @@ do
         else
           epochkey=$(openssl rand -base64 32 | tee "${jlogsf}"/key_"${epoch}")
         fi
-        currslots_enc=$(echo "${currentslots}" | gpg --symmetric --armor --batch --passphrase "${epochkey}")
+        currslots_enc=$(echo "${currslots}" | gpg --symmetric --armor --batch --passphrase "${epochkey}")
         json="$(jq -n --compact-output --arg epoch "$epoch" --arg poolid "$POOL_ID" --arg uid "$(cat $POOLTOOL_UID_FILE)" --arg genesis "$GENESIS" --arg slotsct "$slotsct" --arg prevepochkey "$prevepochkey" --arg currslots_enc "$currslots_enc" '{currentepoch: $epoch, poolid: $poolid, genesispref: $genesis, userid: $uid, assigned_slots: $slotsct, previous_epoch_key: $prevepochkey, encrypted_slots: $currslots_enc}')"
         rc=$(curl -s -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "$json" "https://api.pooltool.io/v0/sendlogs")
         echom 9 " - Pooltool Response for slot logs: $rc"
