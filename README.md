@@ -1,3 +1,5 @@
+# Depreciated! Please refer [this] repo from now on for updates.
+
 # Important:
 - Intention: Test pre-releases in a controlled environment to prevent connecting with incompatible versions on IOHK network and also have a stable environment to learn/study.
 - Remember: To avoid spamming logs of nodes of other network (invalid block0), please ensure to not re-use IP-port combination between different networks
@@ -53,3 +55,5 @@
     - address: /ip4/88.99.83.86/tcp/4007
       id: 0add359010d13fc0e9d403c822887638969276aaedccd1f4
 ```
+
+[this]: https://github.com/cardano-community/guild-operators
