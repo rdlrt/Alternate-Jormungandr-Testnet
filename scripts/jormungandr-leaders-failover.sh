@@ -152,7 +152,7 @@ do
           J2LEADSLOTCNT=$(jcli rest v0 leaders logs get -h $J2_URL | grep "wake_at_time: ~"  | wc -l)
           if [ $J1LEADSLOTCNT -gt 0 -a $J2LEADSLOTCNT -gt 0 ]; then
             logtmp=$jlogsf/leaders_$(date +%d_%mT%T)
-            jcli rest v0 leaders logs get -h $J2_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $logtmp
+            jcli rest v0 leaders logs get -h $J1_URL | grep -e scheduled -e wake | awk 'NR%3{printf "%s ",$0;next;}1' | sed -e 's/scheduled_at_//g;s/_at_time//g'  | sort -V | column -t | grep \~ > $logtmp
             echom 8 " - Complete: Schedule loaded successfully"
           else
             echom 8 " - Current Leader Slots: J1 - $J1LEADSLOTCNT, J2 - $J2LEADSLOTCNT"
