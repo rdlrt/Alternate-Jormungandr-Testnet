@@ -177,11 +177,18 @@ elif [ "$lastBlockHeight" != "" ];
     #Stake
     curl -s -o $LOG_DIRECTORY/$lastBlockDateSlot.currentstakers.json https://pooltool.s3-us-west-2.amazonaws.com/8e4d2a3/pools/$MY_POOL_ID/currentstakers.json
 fi
+
+if [[ "$lastBlockDateSlot" > "$lastBlockDateSlotOLDER" && "$lastBlockDateSlotOLDER" != "1" ]]
+then
+    sleep 20;
+    INIT_JSTATS;
     # Slots Submission
     JSON="$( jq -n --compact-output --arg CURRENTEPOCH "$lastBlockDateSlot" --arg POOLID "$MY_POOL_ID" --arg USERID "$MY_USER_ID" --arg GENESISPREF "$THIS_GENESIS" --arg ASSIGNED "$TOTS"  '{currentepoch: $CURRENTEPOCH, poolid: $POOLID,  genesispref: $GENESISPREF, userid: $USERID, assigned_slots: $ASSIGNED}')"
 
     RESPONSE=$(curl -s -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data "$JSON" "https://api.pooltool.io/v0/sendlogs");
-
+else
+    lastBlockDateSlotOLDER="$lastBlockDateSlot";
+fi
 }
 
 POOLTOOL()
@@ -589,6 +596,7 @@ FLATLINERSCOUNTER=0;
 TRY=0;
 BACKUP=0;
 PoolT_max="$Block_diff";
+lastBlockDateSlotOLDER="1";
 
 ## Main process ##
 ##################
